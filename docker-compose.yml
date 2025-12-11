@@ -1,0 +1,23 @@
+version: "3.9"
+services:
+  db:
+    image: postgres:latest
+    container_name: login-portal-db
+    restart: unless-stopped
+    env_file: .env
+    environment:
+      - POSTGRES_USER=${POSTGRES_USER:-postgres}
+      - POSTGRES_PASSWORD=${POSTGRES_PASSWORD:-password}
+      - POSTGRES_DB=${POSTGRES_DB:-login-portal}
+    ports:
+      - "${POSTGRES_PORT:-5432}:5432"
+    volumes:
+      - db_data:/var/lib/postgresql
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER} -d ${POSTGRES_DB}"]
+      interval: 30s
+      timeout: 5s
+      retries: 3
+
+volumes:
+  db_data:
