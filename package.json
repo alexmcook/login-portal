@@ -3,7 +3,10 @@
   "scripts": {
     "build": "tsc",
     "start": "node --env-file=.env --enable-source-maps dist/index.js",
-    "dev": "tsx watch --env-file=.env src/index.ts"
+    "dev": "tsx watch --env-file=.env src/index.ts",
+    "migrate:up": "dotenv -e .env -- node-pg-migrate up",
+    "migrate:down": "dotenv -e .env -- node-pg-migrate down",
+    "migrate:create": "dotenv -e .env -- node-pg-migrate create"
   },
   "devDependencies": {
     "@types/node": "^20.0.0",
