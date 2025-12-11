@@ -1,7 +1,6 @@
 import { Pool } from 'pg'
 
 export const pool = new Pool({
-  connectionString: process.env.DATABASE_URL,
   host: process.env.POSTGRES_HOST,
   port: process.env.POSTGRES_PORT ? Number(process.env.POSTGRES_PORT) : undefined,
   user: process.env.POSTGRES_USER,
