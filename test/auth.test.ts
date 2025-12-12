@@ -15,7 +15,7 @@ describe('registerUser', () => {
 			verify: vi.fn()
 		};
 
-		mockUserRepo.createUser.mockResolvedValue({ id: 1, email: 'test@example.com' });
+		mockUserRepo.createUser.mockResolvedValue({ created: true, user: { id: 1, email: 'test@example.com' }});
     mockHashProvider.hash.mockResolvedValue('hashed-password');
 
 		const auth = setupAuth(mockUserRepo, mockHashProvider);

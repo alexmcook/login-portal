@@ -19,15 +19,15 @@ export function setupAuth(userRepo: UserRepo, hashProvider: HashProvider): AuthS
 
 async function registerUser(userRepo: UserRepo, hashProvider: HashProvider, email: string, password: string) {
     const hashedPassword = await hashProvider.hash(password, { timeCost: 3 });
-    const user = await userRepo.createUser(email, hashedPassword);
-    if (!user) return { ok: false, code: 500, message: 'email already registered' };
-    return { ok: true, userId: user.id };
+    const result = await userRepo.createUser(email, hashedPassword);
+    if (!result.created) return { ok: false, code: 500, message: 'email already registered' };
+    return { ok: true, userId: result.user!.id! };
 }
 
 async function verifyUser(userRepo: UserRepo, hashProvider: HashProvider, email: string, password: string) {
-    const user = await userRepo.findByEmail(email);
-    if (!user) return { ok: false, code: 401, message: 'invalid credentials' };
-    const valid = await hashProvider.verify(user.password_hash, password);
+    const result = await userRepo.findByEmail(email);
+    if (!result.created) return { ok: false, code: 401, message: 'invalid credentials' };
+    const valid = await hashProvider.verify(result.user!.password_hash!, password);
     if (!valid) return { ok: false, code: 401, message: 'invalid credentials' };
-    return { ok: true, userId: user.id };
+    return { ok: true, userId: result.user!.id! };
 }
