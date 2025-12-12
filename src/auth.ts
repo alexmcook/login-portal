@@ -1,4 +1,4 @@
-import argon2 from 'argon2'
+import * as argon2 from 'argon2'
 import { pool } from './db.js'
 
 export async function createUser(email: string, password: string) {

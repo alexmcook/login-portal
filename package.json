@@ -6,14 +6,18 @@
     "dev": "tsx watch --env-file=.env src/index.ts",
     "migrate:up": "dotenv -e .env -- node-pg-migrate up",
     "migrate:down": "dotenv -e .env -- node-pg-migrate down",
-    "migrate:create": "dotenv -e .env -- node-pg-migrate create"
+    "migrate:create": "dotenv -e .env -- node-pg-migrate create",
+    "test": "vitest",
+    "test:watch": "vitest --watch",
+    "test:coverage": "vitest run --coverage"
   },
   "devDependencies": {
     "@types/node": "^20.0.0",
     "@types/pg": "^8.16.0",
     "ts-node": "^10.9.1",
     "tsx": "^3.12.7",
-    "typescript": "^5.9.3"
+    "typescript": "^5.9.3",
+    "vitest": "^1.6.1"
   },
   "dependencies": {
     "argon2": "^0.44.0",
