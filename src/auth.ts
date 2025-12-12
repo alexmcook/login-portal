@@ -1,40 +1,33 @@
-import * as argon2 from 'argon2'
-import { pool } from './db.js'
+import { type UserRepo } from './db/user.js'
 
-export async function createUser(email: string, password: string) {
-  const client = await pool.connect()
-  try {
-    await client.query('BEGIN')
-    const existing = await client.query('SELECT id FROM users WHERE email = $1', [email])
-    if (existing.rows.length > 0) {
-      await client.query('ROLLBACK')
-      return { ok: false, code: 409, message: 'email already exists' }
-    }
+export type HashProvider = {
+  hash: (password: string, options?: { timeCost?: number }) => Promise<string>
+  verify: (hash: string, password: string) => Promise<boolean>
+}
 
-    const hash = await argon2.hash(password, { timeCost: 3 })
-    const res = await client.query(
-      'INSERT INTO users (email, password_hash) VALUES ($1, $2) RETURNING id, email, created_at',
-      [email, hash]
-    )
-    await client.query('COMMIT')
-    return { ok: true, user: res.rows[0] }
-  } catch (err) {
-    await client.query('ROLLBACK').catch(() => {})
-    throw err
-  } finally {
-    client.release()
+export type AuthService = {
+  registerUser(email: string, password: string): Promise<{ ok: boolean; userId?: number; code?: number; message?: string }>
+  verifyUser(email: string, password: string): Promise<{ ok: boolean; userId?: number; code?: number; message?: string }>
+}
+
+export function setupAuth(userRepo: UserRepo, hashProvider: HashProvider): AuthService {
+  return {
+    registerUser: (email: string, password: string) => registerUser(userRepo, hashProvider, email, password),
+    verifyUser: (email: string, password: string) => verifyUser(userRepo, hashProvider, email, password)
   }
 }
 
-export async function verifyUser(email: string, password: string) {
-  const res = await pool.query('SELECT id, password_hash FROM users WHERE email = $1', [email])
-  if (res.rowCount === 0) return { ok: false, code: 401, message: 'invalid credentials' }
-  const user = res.rows[0]
+async function registerUser(userRepo: UserRepo, hashProvider: HashProvider, email: string, password: string) {
+    const hashedPassword = await hashProvider.hash(password, { timeCost: 3 });
+    const user = await userRepo.createUser(email, hashedPassword);
+    if (!user) return { ok: false, code: 500, message: 'email already registered' };
+    return { ok: true, userId: user.id };
+}
 
-  const valid = await argon2.verify(user.password_hash, password)
-  if (!valid) return { ok: false, code: 401, message: 'invalid credentials' }
-
-  // update last_login
-  await pool.query('UPDATE users SET last_login = now() WHERE id = $1', [user.id])
-  return { ok: true, userId: user.id }
+async function verifyUser(userRepo: UserRepo, hashProvider: HashProvider, email: string, password: string) {
+    const user = await userRepo.findByEmail(email);
+    if (!user) return { ok: false, code: 401, message: 'invalid credentials' };
+    const valid = await hashProvider.verify(user.password_hash, password);
+    if (!valid) return { ok: false, code: 401, message: 'invalid credentials' };
+    return { ok: true, userId: user.id };
 }

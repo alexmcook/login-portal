@@ -7,13 +7,19 @@
     "migrate:up": "dotenv -e .env -- node-pg-migrate up",
     "migrate:down": "dotenv -e .env -- node-pg-migrate down",
     "migrate:create": "dotenv -e .env -- node-pg-migrate create",
-    "test": "vitest",
+    "test": "vitest run",
     "test:watch": "vitest --watch",
-    "test:coverage": "vitest run --coverage"
+    "test:coverage": "vitest run --coverage",
+    "lint": "eslint . --ext .ts,.js",
+    "lint:fix": "eslint . --ext .ts,.js --fix"
   },
   "devDependencies": {
     "@types/node": "^20.0.0",
     "@types/pg": "^8.16.0",
+    "@typescript-eslint/eslint-plugin": "^8.49.0",
+    "@typescript-eslint/parser": "^8.49.0",
+    "eslint": "^9.39.1",
+    "eslint-config-prettier": "^10.1.8",
     "ts-node": "^10.9.1",
     "tsx": "^3.12.7",
     "typescript": "^5.9.3",
