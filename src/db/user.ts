@@ -1,7 +1,7 @@
 import { query, transaction } from './db.js'
 
 export type UserResult = { created: boolean, user?: UserRow };
-export type UserRow = { id?: number; email?: string; password_hash?: string };
+export type UserRow = { id?: string; email?: string; password_hash?: string };
 export type UserRepo = {
     findByEmail(email: string): Promise<UserResult>
     createUser(email: string, passwordHash: string): Promise<UserResult>
