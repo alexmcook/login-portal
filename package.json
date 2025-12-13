@@ -28,6 +28,7 @@
     "vitest": "^1.6.1"
   },
   "dependencies": {
+    "@aws-sdk/client-ses": "^3.948.0",
     "@fastify/cookie": "^11.0.2",
     "@fastify/cors": "^11.2.0",
     "argon2": "^0.44.0",

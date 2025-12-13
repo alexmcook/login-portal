@@ -1,4 +1,4 @@
-import { type UserRepo } from './db/user.js'
+import { type UserRepo } from '../repositories/user.js'
 
 export type HashProvider = {
   hash: (password: string, options?: { timeCost?: number }) => Promise<string>

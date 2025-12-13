@@ -1,5 +1,5 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest'
-import { setupAuth } from '../src/auth.ts'
+import { setupAuth } from '../src/services/auth.ts'
 
 describe('registerUser', () => {
 	beforeEach(() => { vi.resetAllMocks() });
