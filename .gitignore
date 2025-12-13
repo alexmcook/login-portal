@@ -4,3 +4,5 @@ dist/
 
 client/node_module/
 client/dist/
+
+*.http

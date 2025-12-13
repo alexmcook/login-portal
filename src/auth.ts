@@ -6,8 +6,8 @@ export type HashProvider = {
 }
 
 export type AuthService = {
-  registerUser(email: string, password: string): Promise<{ ok: boolean; userId?: number; code?: number; message?: string }>
-  verifyUser(email: string, password: string): Promise<{ ok: boolean; userId?: number; code?: number; message?: string }>
+  registerUser(email: string, password: string): Promise<{ ok: boolean; userId?: string; code?: number; message?: string }>
+  verifyUser(email: string, password: string): Promise<{ ok: boolean; userId?: string; code?: number; message?: string }>
 }
 
 export function setupAuth(userRepo: UserRepo, hashProvider: HashProvider): AuthService {
@@ -20,13 +20,13 @@ export function setupAuth(userRepo: UserRepo, hashProvider: HashProvider): AuthS
 async function registerUser(userRepo: UserRepo, hashProvider: HashProvider, email: string, password: string) {
     const hashedPassword = await hashProvider.hash(password, { timeCost: 3 });
     const result = await userRepo.createUser(email, hashedPassword);
-    if (!result.created) return { ok: false, code: 500, message: 'email already registered' };
+    if (!result.success) return { ok: false, code: 500, message: 'email already registered' };
     return { ok: true, userId: result.user!.id! };
 }
 
 async function verifyUser(userRepo: UserRepo, hashProvider: HashProvider, email: string, password: string) {
     const result = await userRepo.findByEmail(email);
-    if (!result.created) return { ok: false, code: 401, message: 'invalid credentials' };
+    if (!result.success) return { ok: false, code: 401, message: 'invalid credentials' };
     const valid = await hashProvider.verify(result.user!.password_hash!, password);
     if (!valid) return { ok: false, code: 401, message: 'invalid credentials' };
     return { ok: true, userId: result.user!.id! };

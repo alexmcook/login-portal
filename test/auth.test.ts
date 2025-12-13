@@ -6,8 +6,9 @@ describe('registerUser', () => {
 
 	it('hashes the password, inserts the user and returns the created row', async () => {
     const mockUserRepo = {
-      createUser: vi.fn(),
-      findByEmail: vi.fn()
+      findById: vi.fn(),
+      findByEmail: vi.fn(),
+      createUser: vi.fn()
     };
 
 		const mockHashProvider = {

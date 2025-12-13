@@ -1,10 +1,11 @@
 import Fastify, { type FastifyInstance, type FastifyRequest, type FastifyReply } from 'fastify'
 import cookie from '@fastify/cookie'
+import cors from '@fastify/cors'
 import * as argon2 from 'argon2';
 import { testConnection } from './db/db.js'
 import { setupAuth } from './auth.js'
 import { userRepo } from './db/user.js'
-import { initRedis, createSession, getSession, refreshSessionTtl } from './session.js'
+import { initRedis, createSession, getSession, refreshSessionTtl, destroySession } from './session.js'
 
 const fastify: FastifyInstance = Fastify({
   logger: true,
@@ -15,6 +16,12 @@ if (process.env.COOKIE_SECRET) {
 } else {
   fastify.register(cookie);
 }
+
+fastify.register(cors, {
+  origin: 'http://localhost:5173',
+  credentials: true,
+  methods: ['GET', 'POST']
+});
 
 fastify.addHook('preHandler', async (request, _) => {
   try {
@@ -48,7 +55,7 @@ fastify.get('/', async () => {
   return { hello: 'world' };
 });
 
-fastify.post('/register', async (request, reply) => {
+fastify.post('/api/register', async (request, reply) => {
   const body = request.body as { email?: string; password?: string };
   if (!body || typeof body.email !== 'string' || typeof body.password !== 'string') {
     return reply.code(400).send({ error: 'email and password are required' });
@@ -65,7 +72,7 @@ fastify.post('/register', async (request, reply) => {
   }
 });
 
-fastify.post('/login', async (request, reply) => {
+fastify.post('/api/login', async (request, reply) => {
   const body = request.body as { email?: string; password?: string };
   if (!body || typeof body.email !== 'string' || typeof body.password !== 'string') {
     return reply.code(400).send({ error: 'email and password are required' });
@@ -78,6 +85,34 @@ fastify.post('/login', async (request, reply) => {
   } catch (err) {
     request.log.error(err);
     return reply.code(500).send({ error: 'login failed' });
+  }
+});
+
+fastify.post('/api/logout', async (request, reply) => {
+    const sid = request.cookies?.sid as string | undefined;
+    if (sid) {
+        await destroySession(reply, sid);
+        return reply.code(200).send({ ok: true });
+    }
+    return reply.code(400).send({ ok: false });
+});
+
+fastify.get('/api/secure', async (request, reply) => {
+  const session = request.session;
+  if (!session || typeof session.uid === 'undefined') {
+    return reply.code(401).send({ error: 'unauthorized' });
+  }
+
+  try {
+    const uid = String(session.uid);
+    const res = await userRepo.findById(uid);
+    if (!res.success) {
+      return reply.code(401).send({ error: 'unauthorized' });
+    }
+    return reply.code(200).send({ ok: true, user: res.user });
+  } catch (err) {
+    request.log.error(err);
+    return reply.code(500).send({ error: 'internal' });
   }
 });
 
