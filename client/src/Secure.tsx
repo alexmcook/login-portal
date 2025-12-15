@@ -30,6 +30,19 @@ export const Secure = () => {
     navigate('/', { replace: true });
   }
 
+  const getDateTime = (dateString: string) => {
+    const date = new Date(dateString);
+    return date.toLocaleString('en-US', {
+      year: '2-digit',
+      month: 'numeric',
+      day: 'numeric',
+      hour: 'numeric',
+      minute: '2-digit',
+      second: '2-digit',
+      timeZoneName: 'short'
+    });
+  }
+
   if (loading) {
     return <div>Loading...</div>
   }
@@ -39,16 +52,16 @@ export const Secure = () => {
       <article>
         <h1>Secure Page</h1>
         <hr />
-        <strong>UserId</strong>
+        <strong>User ID</strong>
         <p><small>{userData.id}</small></p>
         <strong>Email</strong>
         <p><small>{userData.email}</small></p>
         <strong>Password Hash</strong>
         <p><small>{userData.password_hash}</small></p>
         <strong>Created At</strong>
-        <p><small>{userData.created_at}</small></p>
+        <p><small>{getDateTime(userData.created_at)}</small></p>
         <strong>Last Login</strong>
-        <p><small>{userData.last_login}</small></p>
+        <p><small>{getDateTime(userData.last_login)}</small></p>
       </article>
       <footer className="container">
         {isAuthed && <button onClick={handleLogout}>Logout</button>}
