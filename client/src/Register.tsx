@@ -96,6 +96,10 @@ export const Register = ({ setIsAuthed }: { setIsAuthed: (value: boolean) => voi
           </button>
         </form>
       </article>
+      <hr />
+      <footer className="container">
+        <button onClick={() => navigate('/')}>Back</button>
+      </footer>
     </main>
   );
 }

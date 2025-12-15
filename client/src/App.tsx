@@ -13,8 +13,8 @@ export const App = () => {
     <>
       <main className="container">
         <Login />
+        <hr />
       </main>
-      <hr />
       <footer className="container">
         <button onClick={handleRegister}>Register</button>
       </footer>
