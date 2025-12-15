@@ -2,6 +2,8 @@ import { redis } from './redis.js';
 import crypto from 'crypto';
 import type { FastifyReply } from 'fastify';
 
+export const session = { create, destroy, get, refreshTtl };
+
 const SESSION_PREFIX = 'sess:';
 const SESSION_TTL = 60 * 60 * 24; // 24h
 
@@ -14,11 +16,11 @@ function sidToKey(sid: string): string {
   return `${SESSION_PREFIX}${sid}`;
 }
 
-export function generateSid(): string {
+function generateSid(): string {
   return crypto.randomBytes(16).toString('hex');
 }
 
-export async function createSession(reply: FastifyReply, uid: String): Promise<string> {
+async function create(reply: FastifyReply, uid: String): Promise<string> {
   const sid = generateSid();
   const key = sidToKey(sid);
   await redis.set(key, uid, SESSION_TTL);
@@ -33,7 +35,7 @@ export async function createSession(reply: FastifyReply, uid: String): Promise<s
   return sid;
 }
 
-export async function getSession(sid: string | undefined) {
+async function get(sid: string | undefined) {
   if (!sid) return null;
   const key = sidToKey(sid);
   const value = await redis.get(key);
@@ -45,7 +47,7 @@ export async function getSession(sid: string | undefined) {
   }
 }
 
-export async function destroySession(reply: FastifyReply, sid?: string) {
+async function destroy(reply: FastifyReply, sid?: string) {
   if (sid) {
     const key = sidToKey(sid);
     await redis.del(key);
@@ -53,7 +55,7 @@ export async function destroySession(reply: FastifyReply, sid?: string) {
   reply.clearCookie('sid');
 }
 
-export async function refreshSessionTtl(sid: string) {
+async function refreshTtl(sid: string) {
   const key = sidToKey(sid);
   await redis.expire(key, SESSION_TTL);
 }

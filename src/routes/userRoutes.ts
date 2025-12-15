@@ -2,7 +2,7 @@ import { type FastifyInstance, type FastifyPluginOptions, type FastifyRequest, t
 import * as argon2 from 'argon2';
 import { setupAuth } from '../services/auth.js'
 import { userRepo } from '../repositories/user.js'
-import { createSession, destroySession, getSession, refreshSessionTtl } from '../services/session.js'
+import { session } from '../services/session.js'
 import { sendEmail } from '../services/email.js'
 
 const { registerUser, verifyUser } = setupAuth(userRepo, {
@@ -16,7 +16,7 @@ const { registerUser, verifyUser } = setupAuth(userRepo, {
 
 async function finalizeLogin(request: FastifyRequest, reply: FastifyReply, userId: string) {
   try {
-    await createSession(reply, userId);
+    await session.create(reply, userId);
   } catch (err) {
     request.log.warn({ err }, 'failed to create session');
   }
@@ -31,10 +31,10 @@ export async function userRoutes(fastify: FastifyInstance, _options: FastifyPlug
         request.session = null;
         return;
       }
-      const value = await getSession(sid);
+      const value = await session.get(sid);
       request.session = { uid: value };
       if (value) {
-        void refreshSessionTtl(sid).catch(() => {});
+        void session.refreshTtl(sid).catch(() => {});
       }
     } catch (err) {
       request.log.warn({ err }, 'session load failed');
@@ -78,7 +78,7 @@ export async function userRoutes(fastify: FastifyInstance, _options: FastifyPlug
   fastify.post('/logout', async (request, reply) => {
     const sid = request.cookies?.sid as string | undefined;
     if (sid) {
-      await destroySession(reply, sid);
+      await session.destroy(reply, sid);
       return reply.code(200).send({ ok: true });
     }
     return reply.code(400).send({ ok: false });
