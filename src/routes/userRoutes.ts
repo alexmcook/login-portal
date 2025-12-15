@@ -16,7 +16,7 @@ const { registerUser, verifyUser } = setupAuth(userRepo, {
 
 async function finalizeLogin(request: FastifyRequest, reply: FastifyReply, userId: string) {
   try {
-    await createSession(reply, { uid: userId });
+    await createSession(reply, userId);
   } catch (err) {
     request.log.warn({ err }, 'failed to create session');
   }
@@ -31,9 +31,9 @@ export async function userRoutes(fastify: FastifyInstance, _options: FastifyPlug
         request.session = null;
         return;
       }
-      const s = await getSession(sid);
-      request.session = s;
-      if (s) {
+      const value = await getSession(sid);
+      request.session = { uid: value };
+      if (value) {
         void refreshSessionTtl(sid).catch(() => {});
       }
     } catch (err) {

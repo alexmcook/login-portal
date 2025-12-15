@@ -10,19 +10,18 @@ export type SessionData = {
   [key: string]: unknown;
 };
 
-function sidToKey(sid: string) {
+function sidToKey(sid: string): string {
   return `${SESSION_PREFIX}${sid}`;
 }
 
-export function generateSid() {
+export function generateSid(): string {
   return crypto.randomBytes(16).toString('hex');
 }
 
-export async function createSession(reply: FastifyReply, data: SessionData) {
+export async function createSession(reply: FastifyReply, uid: String): Promise<string> {
   const sid = generateSid();
   const key = sidToKey(sid);
-  const value = JSON.stringify(data);
-  await redis.set(key, SESSION_TTL, value);
+  await redis.set(key, uid, SESSION_TTL);
   // set cookie
   reply.setCookie('sid', sid, {
     httpOnly: true,
@@ -37,11 +36,10 @@ export async function createSession(reply: FastifyReply, data: SessionData) {
 export async function getSession(sid: string | undefined) {
   if (!sid) return null;
   const key = sidToKey(sid);
-  const raw = await redis.get(key);
-  if (!raw) return null;
+  const value = await redis.get(key);
+  if (!value) return null;
   try {
-    const parsed = JSON.parse(raw) as SessionData;
-    return parsed;
+    return value;
   } catch (err) {
     return null;
   }
