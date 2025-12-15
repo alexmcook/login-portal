@@ -1,4 +1,4 @@
-import { query } from '../services/db.js'
+import { query } from '../services/postgres.js'
 
 export type UserResult = { success: boolean, user?: UserRow };
 export type UserRow = { id?: string; email?: string; password_hash?: string, created_at?: Date, updated_at?: Date, last_login?: Date };

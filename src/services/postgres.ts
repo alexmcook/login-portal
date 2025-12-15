@@ -9,15 +9,6 @@ const pool = new Pool({
   max: 10
 })
 
-export async function testConnection(): Promise<void> {
-  const client = await pool.connect()
-  try {
-    await client.query('SELECT 1')
-  } finally {
-    client.release()
-  }
-}
-
 // Convenience wrapper for simple queries using the shared pool
 export async function query(text: string, params?: unknown[]): Promise<QueryResult<QueryResultRow>> {
   return pool.query(text, params)

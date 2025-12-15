@@ -1,8 +1,7 @@
 import Fastify, { type FastifyInstance } from 'fastify'
 import cookie from '@fastify/cookie'
 import cors from '@fastify/cors'
-import { testConnection } from './services/db.js'
-import { initRedis } from './services/session.js'
+import { redis } from './services/redis.js'
 import { userRoutes } from './routes/userRoutes.js'
 
 const fastify: FastifyInstance = Fastify({
@@ -25,8 +24,6 @@ await fastify.register(userRoutes, { prefix: '/api' });
 
 async function start() {
 	try {
-		await testConnection();
-		await initRedis();
 		await fastify.listen({ port: 3000 });
 		fastify.log.info('server started');
 	} catch (err) {
@@ -40,6 +37,7 @@ start();
 
 async function shutdown() {
 	try {
+    await redis.quit();
 		await fastify.close();
 	} finally {
 		process.exit(0);
