@@ -42,9 +42,6 @@ export async function userRoutes(fastify: FastifyInstance, _options: FastifyPlug
     }
   });
 
-  // This is a comment
-  // Testing
-  // my Comment
   fastify.post('/register', async (request, reply) => {
     const body = request.body as { email?: string; password?: string };
     if (!body || typeof body.email !== 'string' || typeof body.password !== 'string') {
@@ -100,8 +97,7 @@ export async function userRoutes(fastify: FastifyInstance, _options: FastifyPlug
         return reply.code(401).send({ error: 'unauthorized' });
       }
 
-      const { password_hash, ...safeUser } = res.user as any;
-      return reply.code(200).send({ ok: true, user: safeUser });
+      return reply.code(200).send({ ok: true, user: res.user });
     } catch (err) {
       request.log.error(err);
       return reply.code(500).send({ error: 'internal' });
