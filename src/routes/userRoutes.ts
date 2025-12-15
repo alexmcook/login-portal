@@ -15,7 +15,7 @@ const { registerUser, verifyUser } = setupAuth(userRepo, {
 });
 
 async function finalizeLogin(request: FastifyRequest, reply: FastifyReply, userId: string) {
-  userRepo.setLastLogin(userId);
+  await userRepo.setLastLogin(userId);
   try {
     await session.create(reply, userId);
   } catch (err) {

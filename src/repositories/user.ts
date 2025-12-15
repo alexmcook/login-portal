@@ -39,6 +39,5 @@ async function createUser(email: string, passwordHash: string): Promise<UserResu
 }
 
 async function setLastLogin(id: string): Promise<void> {
-  console.log('Setting last login for user:', id);
   await query('UPDATE users SET last_login = NOW() WHERE id = $1', [id]);
 }
