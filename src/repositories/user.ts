@@ -7,12 +7,14 @@ export type UserRepo = {
     findByEmail(email: string): Promise<UserResult>
     findById(id: string): Promise<UserResult>
     createUser(email: string, passwordHash: string): Promise<UserResult>
+    setLastLogin(id: string): Promise<void>
 };
 
 export const userRepo: UserRepo = {
     findById,
     findByEmail,
-    createUser
+    createUser,
+    setLastLogin
 };
 
 async function findById(id: string): Promise<UserResult> {
@@ -37,5 +39,6 @@ async function createUser(email: string, passwordHash: string): Promise<UserResu
 }
 
 async function setLastLogin(id: string): Promise<void> {
-    await query('UPDATE users SET last_login = NOW() WHERE id = $1', [id]);
+  console.log('Setting last login for user:', id);
+  await query('UPDATE users SET last_login = NOW() WHERE id = $1', [id]);
 }
