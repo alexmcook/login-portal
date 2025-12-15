@@ -5,6 +5,7 @@ import { App } from './App.tsx'
 import { AppProvider } from './AppContext.tsx';
 import { Register } from './Register.tsx';
 import { Secure } from './Secure.tsx';
+import { Activate } from './Activate.tsx';
 
 const router = createBrowserRouter([
   {
@@ -18,6 +19,10 @@ const router = createBrowserRouter([
   {
     path: '/secure',
     element: <Secure />,
+  },
+  {
+    path: '/activate',
+    element: <Activate />,
   }
 ]);
 

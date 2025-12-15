@@ -5,7 +5,7 @@ import { userRepo } from '../repositories/user.js'
 import { session } from '../services/session.js'
 import { sendEmail } from '../services/email.js'
 
-const { registerUser, verifyUser } = setupAuth(userRepo, {
+const { registerUser, activateUser, verifyUser } = setupAuth(userRepo, {
   hash: async (password, options) => {
     return argon2.hash(password, { timeCost: options?.timeCost ?? 3 });
   },
@@ -48,15 +48,26 @@ export async function userRoutes(fastify: FastifyInstance, _options: FastifyPlug
     if (!body || typeof body.email !== 'string' || typeof body.password !== 'string') {
       return reply.code(400).send({ error: 'email and password are required' });
     }
-
-      try {
+    try {
       const result = await registerUser(body.email, body.password);
       if (!result.ok) return reply.code(result.code ?? 400).send({ error: result.message });
-      // create session cookie
-      return await finalizeLogin(request, reply, result.userId!);
+      console.log(`Activation link for ${body.email}: ${result.activationLink}`);
+      return reply.code(201).send({ ok: true, activationLink: result.activationLink });
     } catch (err) {
       request.log.error(err);
       return reply.code(500).send({ error: 'registration failed' });
+    }
+  });
+
+  fastify.post('/activate', async (request, reply) => {
+    const body = request.body as { token?: string };
+    try {
+      const result = await activateUser(body.token);
+      if (!result.ok) return reply.code(result.code ?? 400).send({ error: result.message });
+      return reply.code(200).send({ ok: true });
+    } catch (err) {
+      request.log.error(err);
+      return reply.code(500).send({ error: 'activation failed' });
     }
   });
 
@@ -68,8 +79,10 @@ export async function userRoutes(fastify: FastifyInstance, _options: FastifyPlug
 
     try {
       const result = await verifyUser(body.email, body.password);
+      
       if (!result.ok) return reply.code(result.code ?? 400).send({ error: result.message });
-      return await finalizeLogin(request, reply, result.userId!);
+
+      return await finalizeLogin(request, reply, result.userId);
     } catch (err) {
       request.log.error(err);
       return reply.code(500).send({ error: 'login failed' });
