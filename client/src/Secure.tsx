@@ -1,9 +1,7 @@
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAppContext } from './AppContext.js';
-import { secure, logout } from './api.js';
-
-type UserData = { id: string, email: string, password_hash: string };
+import { secure, logout, type UserData } from './api.js';
 
 export const Secure = () => {
   const [userData, setUserData] = useState<UserData | null>(null);
@@ -47,9 +45,9 @@ export const Secure = () => {
         <strong>Password Hash</strong>
         <p><small>{userData.password_hash}</small></p>
         <strong>Created At</strong>
-        <p><small>...</small></p>
+        <p><small>{userData.created_at}</small></p>
         <strong>Last Login</strong>
-        <p><small>...</small></p>
+        <p><small>{userData.last_login}</small></p>
       </article>
       <footer className="container">
         {isAuthed && <button onClick={handleLogout}>Logout</button>}

@@ -1,6 +1,6 @@
 const API_PATH = "http://localhost:3000/api";
 
-export type UserData = { id: string; email: string; password_hash: string };
+export type UserData = { id: string; email: string; password_hash: string; created_at: string; last_login: string };
 export type DataResponse = { ok: boolean; error?: string; user?: UserData };
 
 export async function login(email: string, password: string): Promise<DataResponse> {
