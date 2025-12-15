@@ -1,14 +1,23 @@
-import { useState } from 'react';
-import './App.css'
-import { Home } from './Home.js'
-import { Login } from './Login.js'
+import { useState, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
+import { Login } from './Login.tsx';
 
-export function App() {
-  const [isAuthed, setIsAuthed] = useState(false);
+export const App = () => {
+  const navigate = useNavigate();
+
+  const handleRegister = () => {
+    navigate('/register');
+  }
 
   return (
-    <div className="app-root">
-      {isAuthed ? <Home isAuthed={isAuthed} setIsAuthed={setIsAuthed} /> : <Login setIsAuthed={setIsAuthed} />}
-    </div>
+    <>
+      <main className="container">
+        <Login />
+      </main>
+      <hr />
+      <footer className="container">
+        <button onClick={handleRegister}>Register</button>
+      </footer>
+    </>
   );
 };

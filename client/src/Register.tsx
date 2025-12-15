@@ -1,9 +1,8 @@
 import { useEffect, useState } from 'react'
-import { useAppContext } from './AppContext.js';
 import { useNavigate } from 'react-router-dom';
-import { login, secure } from './api.js'
+import { register } from './api.js'
 
-export const Login = () => {
+export const Register = ({ setIsAuthed }: { setIsAuthed: (value: boolean) => void }) => {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [error, setError] = useState('');
@@ -14,17 +13,14 @@ export const Login = () => {
       const response = await secure();
       if (response.ok) {
         setIsAuthed(true);
-        navigate('/secure', { replace: true });
       }
     }
     checkAuth();
   }, []);
 
-  const { isAuthed, setIsAuthed } = useAppContext();
-
   const navigate = useNavigate();
 
-  const handleLogin = async (event: React.MouseEvent<HTMLButtonElement> | React.FormEvent<HTMLFormElement>) => {
+  const handleRegister = async (event: React.MouseEvent<HTMLButtonElement> | React.FormEvent<HTMLFormElement>) => {
     event.preventDefault();
     if (!email || !password) {
       setError('Email and password are required');
@@ -32,17 +28,16 @@ export const Login = () => {
     }
     setLoading(true);
     setError('');
-    const result = await login(email, password);
+    const result = await register(email, password);
     setLoading(false);
     if (!result.ok) {
-      setError(result.error || 'Login failed');
+      setError(result.error || 'Registration failed');
     } else {
-      setIsAuthed(true);
-      navigate('/secure', { replace: true });
+      navigate('/');
     }
   };
 
-  const inputs = (error) => {
+  const inputs = (error: string) => {
     if (!error) {
       return (
         <>
@@ -93,11 +88,11 @@ export const Login = () => {
   return (
     <main className="container">
       <article>
-        <h1>Login</h1>
-        <form onSubmit={handleLogin}>
+        <h1>Register</h1>
+        <form onSubmit={handleRegister}>
           {inputs(error)}
-          <button type="submit" disabled={loading} onClick={handleLogin}>
-            Login
+          <button type="submit" disabled={loading} onClick={handleRegister}>
+            Register
           </button>
         </form>
       </article>
