@@ -13,6 +13,7 @@ export const Secure = () => {
       const response = await secure();
       if (response.ok) {
         setUserData(response.user);
+        setIsAuthed(true);
       }
       setLoading(false);
     }
