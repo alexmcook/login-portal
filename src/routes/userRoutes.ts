@@ -3,6 +3,7 @@ import * as argon2 from 'argon2';
 import { setupAuth } from '../services/auth.js'
 import { userRepo } from '../repositories/user.js'
 import { createSession, destroySession, getSession, refreshSessionTtl } from '../services/session.js'
+import { sendEmail } from '../services/email.js'
 
 const { registerUser, verifyUser } = setupAuth(userRepo, {
   hash: async (password, options) => {
@@ -41,6 +42,9 @@ export async function userRoutes(fastify: FastifyInstance, _options: FastifyPlug
     }
   });
 
+  // This is a comment
+  // Testing
+  // my Comment
   fastify.post('/register', async (request, reply) => {
     const body = request.body as { email?: string; password?: string };
     if (!body || typeof body.email !== 'string' || typeof body.password !== 'string') {
@@ -84,21 +88,29 @@ export async function userRoutes(fastify: FastifyInstance, _options: FastifyPlug
   });
 
   fastify.get('/secure', async (request, reply) => {
-  const session = request.session;
-  if (!session || typeof session.uid === 'undefined') {
-      return reply.code(401).send({ error: 'unauthorized' });
-  }
-
-try {
-  const uid = String(session.uid);
-  const res = await userRepo.findById(uid);
-    if (!res.success) {
+    const session = request.session;
+    if (!session || typeof session.uid === 'undefined') {
       return reply.code(401).send({ error: 'unauthorized' });
     }
-      return reply.code(200).send({ ok: true, user: res.user });
+
+    try {
+      const uid = String(session.uid);
+      const res = await userRepo.findById(uid);
+      if (!res.success || !res.user) {
+        return reply.code(401).send({ error: 'unauthorized' });
+      }
+
+      const { password_hash, ...safeUser } = res.user as any;
+      return reply.code(200).send({ ok: true, user: safeUser });
     } catch (err) {
       request.log.error(err);
       return reply.code(500).send({ error: 'internal' });
     }
+  });
+
+  // small test route (registered at top level, not inside /secure handler)
+  fastify.get('/test', async (request, reply) => {
+    await sendEmail('test@example.com', 'Test Subject', 'This is a test email body');
+    return reply.code(200).send({ ok: true });
   });
 }

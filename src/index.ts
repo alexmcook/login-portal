@@ -6,44 +6,44 @@ import { initRedis } from './services/session.js'
 import { userRoutes } from './routes/userRoutes.js'
 
 const fastify: FastifyInstance = Fastify({
-  logger: true,
+	logger: true,
 });
 
 if (process.env.COOKIE_SECRET) {
-  fastify.register(cookie, { secret: process.env.COOKIE_SECRET });
+	fastify.register(cookie, { secret: process.env.COOKIE_SECRET });
 } else {
-  fastify.register(cookie);
+	fastify.register(cookie);
 }
 
 fastify.register(cors, {
-  origin: 'http://localhost:5173',
-  credentials: true,
-  methods: ['GET', 'POST']
+	origin: 'http://localhost:5173',
+	credentials: true,
+	methods: ['GET', 'POST']
 });
 
-fastify.register(userRoutes, { prefix: '/api' });
+await fastify.register(userRoutes, { prefix: '/api' });
 
 async function start() {
-  try {
-    await testConnection();
-    await initRedis();
-    await fastify.listen({ port: 3000 });
-    fastify.log.info('server started');
-  } catch (err) {
-    fastify.log.error(err);
-    await fastify.close();
-    process.exit(1);
-  }
+	try {
+		await testConnection();
+		await initRedis();
+		await fastify.listen({ port: 3000 });
+		fastify.log.info('server started');
+	} catch (err) {
+		fastify.log.error(err);
+		await fastify.close();
+		process.exit(1);
+	}
 }
 
 start();
 
-const shutdown = async () => {
-  try {
-    await fastify.close();
-  } finally {
-    process.exit(0);
-  }
+async function shutdown() {
+	try {
+		await fastify.close();
+	} finally {
+		process.exit(0);
+	}
 }
 
 process.on('SIGINT', shutdown);
