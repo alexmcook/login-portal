@@ -6,7 +6,8 @@ import { login, secure } from './api.js'
 export const Login = () => {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
-  const [error, setError] = useState('');
+  const [emailError, setEmailError] = useState('');
+  const [passwordError, setPasswordError] = useState('');
   const [loading, setLoading] = useState(false);
 
   useEffect(() => {
@@ -26,67 +27,21 @@ export const Login = () => {
 
   const handleLogin = async (event: React.MouseEvent<HTMLButtonElement> | React.FormEvent<HTMLFormElement>) => {
     event.preventDefault();
-    if (!email || !password) {
-      setError('Email and password are required');
+    const emailError = email.length === 0 ? 'Email is required' : '';
+    const passwordError = password.length === 0 ? 'Password is required' : '';
+    setEmailError(emailError);
+    setPasswordError(passwordError);
+    if (emailError || passwordError) {
       return;
     }
     setLoading(true);
-    setError('');
     const result = await login(email, password);
     setLoading(false);
     if (!result.ok) {
-      setError(result.error || 'Login failed');
+      setPasswordError(result.error || 'Login failed');
     } else {
       setIsAuthed(true);
       navigate('/secure', { replace: true });
-    }
-  };
-
-  const inputs = (error) => {
-    if (!error) {
-      return (
-        <>
-          <small></small>
-          <input
-            type="email"
-            placeholder="Email"
-            autoComplete="email"
-            value={email}
-            onChange={(e) => setEmail(e.target.value)}
-          />
-          <input
-            type="password"
-            placeholder="Password"
-            autoComplete="password"
-            value={password}
-            onChange={(e) => setPassword(e.target.value)}
-          />
-        </>
-      );
-    } else {
-      return (
-        <>
-          <input
-            type="email"
-            placeholder="Email"
-            autoComplete="email"
-            value={email}
-            onChange={(e) => setEmail(e.target.value)}
-            aria-invalid="true"
-            aria-describedby="valid-helper"
-          />
-          <input
-            type="password"
-            placeholder="Password"
-            autoComplete="password"
-            value={password}
-            onChange={(e) => setPassword(e.target.value)}
-            aria-invalid="true"
-            aria-describedby="valid-helper"
-          />
-          <small id="valid-helper">{error}</small>
-        </>
-      );
     }
   };
 
@@ -95,7 +50,26 @@ export const Login = () => {
       <article>
         <h1>Login</h1>
         <form onSubmit={handleLogin}>
-          {inputs(error)}
+        <input
+          type="email"
+          placeholder="Email"
+          autoComplete="email"
+          value={email}
+          onChange={(e) => setEmail(e.target.value)}
+          aria-invalid={emailError ? "true" : undefined}
+          aria-describedby="email-valid"
+        />
+        <small id="email-valid">{emailError}</small>
+        <input
+          type="password"
+          placeholder="Password"
+          autoComplete="password"
+          value={password}
+          onChange={(e) => setPassword(e.target.value)}
+          aria-invalid={passwordError ? "true" : undefined}
+          aria-describedby="password-valid"
+        />
+        <small id="password-valid">{passwordError}</small>
           <button type="submit" disabled={loading} onClick={handleLogin}>
             Login
           </button>
