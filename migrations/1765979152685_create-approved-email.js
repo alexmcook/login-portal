@@ -18,7 +18,10 @@ export const up = (pgm) => {
     unique: ['email'],
   })
 
-  const approved = (process.env.APPROVED_EMAIL ?? '').split(';').map(s => s.trim().toLowerCase());
+  if (!process.env.APPROVED_EMAIL) {
+    return;
+  }
+  const approved = (process.env.APPROVED_EMAIL).split(';').map(s => s.trim().toLowerCase());
   if (approved.length) {
     const values = approved.map(email => `'${email}'`).join(', ');
     pgm.sql(`INSERT INTO approved_email (email) VALUES (${values})`);
