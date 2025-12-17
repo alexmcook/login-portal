@@ -73,3 +73,7 @@ async function activateUser(token: string): Promise<UserResult> {
   await redis.del(tokenHash);
   return { success: true };
 }
+
+async function deleteUser(userId: string): Promise<void> {
+  await query('DELETE FROM users WHERE id = $1', [userId]);
+}

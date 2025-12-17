@@ -103,6 +103,40 @@ export async function userRoutes(fastify: FastifyInstance, _options: FastifyPlug
     return reply.code(400).send({ ok: false });
   });
 
+  fastify.post('/delete', async (request, reply) => {
+    const sid = request.cookies?.sid as string | undefined;
+    if (!sid) {
+      return reply.code(400).send({ ok: false });
+    }
+    const uid = await session.get(sid);
+    if (!uid) {
+      return reply.code(400).send({ ok: false });
+    }
+    const body = request.body as { password?: string };
+    if (!body || typeof body.password !== 'string') {
+      return reply.code(400).send({ error: 'password is required' });
+    }
+
+    try {
+      const result = await userRepo.findById(uid);
+      if (!result.success || !result.user) {
+        return reply.code(404).send({ error: 'user not found' });
+      }
+      const valid = await argon2.verify(result.user.password_hash!, body.password);
+      if (!valid) {
+        return reply.code(401).send({ error: 'invalid credentials' });
+      }
+
+      // delete user
+      await userRepo.deleteUser(uid);
+      await session.destroy(reply, sid);
+      return reply.code(200).send({ ok: true });
+    } catch (err) {
+      request.log.error(err);
+      return reply.code(500).send({ error: 'deletion failed' });
+    }
+  });
+
   fastify.get('/secure', async (request, reply) => {
     const session = request.session;
     if (!session || typeof session.uid === 'undefined') {
