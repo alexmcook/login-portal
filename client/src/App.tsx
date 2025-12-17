@@ -7,7 +7,7 @@ export const App = () => {
 
   const handleRegister = () => {
     navigate('/register');
-  }
+  };
 
   return (
     <>

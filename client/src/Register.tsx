@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react'
 import { useNavigate } from 'react-router-dom';
 import { register, secure } from './api.js'
 import { Notice } from './Notice.js'
+import { utils } from './utils.js';
 
 export const Register = ({ setIsAuthed }: { setIsAuthed: (value: boolean) => void }) => {
   const [email, setEmail] = useState('');
@@ -47,45 +48,9 @@ export const Register = ({ setIsAuthed }: { setIsAuthed: (value: boolean) => voi
     }
   };
 
-  const validateEmail = (email: string): boolean => {
-    if (email.length === 0) {
-      return true;
-    }
-    const re = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-    return re.test(email.toLowerCase());
-  }
-
-  const validatePassword = (password: string): string => {
-    // Password must contain at least one number, one lowercase letter, one uppercase letter, one special character, and be at least 8 characters long
-    if (password.length === 0) {
-      return '';
-    }
-    const hasNumber = /[0-9]/.test(password);
-    if (!hasNumber) {
-      return 'Password must contain at least one number';
-    }
-    const hasLower = /[a-z]/.test(password);
-    if (!hasLower) {
-      return 'Password must contain at least one lowercase letter';
-    }
-    const hasUpper = /[A-Z]/.test(password);
-    if (!hasUpper) {
-      return 'Password must contain at least one uppercase letter';
-    }
-    const hasSpecial = /[!@#$%^&*(),.?":{}|<>]/.test(password);
-    if (!hasSpecial) {
-      return 'Password must contain at least one special character';
-    }
-    const hasLength = /^.{8,}$/.test(password);
-    if (!hasLength) {
-      return 'Password must be at least 8 characters long';
-    }
-    return '';
-  }
-
   const handleEmailChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     setEmail(e.target.value);
-    if (!validateEmail(e.target.value)) {
+    if (!utils.validateEmail(e.target.value)) {
       setEmailError('Invalid email format');
     } else {
       setEmailError('');
@@ -94,7 +59,7 @@ export const Register = ({ setIsAuthed }: { setIsAuthed: (value: boolean) => voi
 
   const handlePasswordChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     setPassword(e.target.value);
-    const error = validatePassword(e.target.value);
+    const error = utils.validatePassword(e.target.value);
     if (error) {
       setPasswordError(error);
     } else {
@@ -109,26 +74,26 @@ export const Register = ({ setIsAuthed }: { setIsAuthed: (value: boolean) => voi
         {showNotice && activationUrl && <Notice message={"Because this email is not approved in the SES sandbox, a link will be shared directly."} url={activationUrl} />}
         <h1>Register</h1>
         <form onSubmit={handleRegister}>
-        <input
-          type="email"
-          placeholder="Email"
-          autoComplete="email"
-          value={email}
-          onChange={handleEmailChange}
-          aria-invalid={emailError ? "true" : undefined}
-          aria-describedby="email-valid"
-        />
-        <small id="email-valid">{emailError}</small>
-        <input
-          type="password"
-          placeholder="Password"
-          autoComplete="password"
-          value={password}
-          onChange={handlePasswordChange}
-          aria-invalid={passwordError ? "true" : undefined}
-          aria-describedby="password-valid"
-        />
-        <small id="password-valid">{passwordError}</small>
+          <input
+            type="email"
+            placeholder="Email"
+            autoComplete="email"
+            value={email}
+            onChange={handleEmailChange}
+            aria-invalid={emailError ? "true" : undefined}
+            aria-describedby="email-valid"
+          />
+          <small id="email-valid">{emailError}</small>
+          <input
+            type="password"
+            placeholder="Password"
+            autoComplete="password"
+            value={password}
+            onChange={handlePasswordChange}
+            aria-invalid={passwordError ? "true" : undefined}
+            aria-describedby="password-valid"
+          />
+          <small id="password-valid">{passwordError}</small>
           <button type="submit" disabled={loading} onClick={handleRegister}>
             Register
           </button>

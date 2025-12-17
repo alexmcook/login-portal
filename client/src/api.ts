@@ -57,7 +57,7 @@ export async function logout(): Promise<DataResponse> {
     console.error(err);
     return { ok: false, error: 'network error' };
   }
-}
+};
 
 export async function activate(token: string): Promise<DataResponse> {
   try {
@@ -72,7 +72,7 @@ export async function activate(token: string): Promise<DataResponse> {
     console.error(err);
     return { ok: false, error: 'network error' };
   }
-}
+};
 
 export async function deactivate(password: string): Promise<DataResponse> {
   try {
@@ -87,4 +87,19 @@ export async function deactivate(password: string): Promise<DataResponse> {
     console.error(err);
     return { ok: false, error: 'network error' };
   }
-}
+};
+
+export async function resetPassword(email: string): Promise<DataResponse> {
+  try {
+    const response = await fetch(`${API_PATH}/reset`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ email }),
+      credentials: 'include'
+    });
+    return await response.json();
+  } catch (err) {
+    console.error(err);
+    return { ok: false, error: 'network error' };
+  }
+};

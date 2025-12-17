@@ -1,7 +1,9 @@
 import { useEffect, useState } from 'react'
 import { useAppContext } from './AppContext.js';
 import { useNavigate } from 'react-router-dom';
-import { login, secure } from './api.js'
+import { login, secure, resetPassword } from './api.js'
+import { PasswordReset } from './PasswordReset.js';
+import { utils } from './utils.js';
 
 export const Login = () => {
   const [email, setEmail] = useState('');
@@ -9,6 +11,7 @@ export const Login = () => {
   const [emailError, setEmailError] = useState('');
   const [passwordError, setPasswordError] = useState('');
   const [loading, setLoading] = useState(false);
+  const [promptResetPassword, setPromptResetPassword] = useState(false);
 
   useEffect(() => {
     const checkAuth = async () => {
@@ -45,34 +48,40 @@ export const Login = () => {
     }
   };
 
+  const handleResetPassword = async () => {
+    setPromptResetPassword(true);
+  }
+
   return (
     <main className="container">
+      {promptResetPassword && <PasswordReset onCancel={() => setPromptResetPassword(false)} />}
       <article>
         <h1>Login</h1>
         <form onSubmit={handleLogin}>
-        <input
-          type="email"
-          placeholder="Email"
-          autoComplete="email"
-          value={email}
-          onChange={(e) => setEmail(e.target.value)}
-          aria-invalid={emailError ? "true" : undefined}
-          aria-describedby="email-valid"
-        />
-        <small id="email-valid">{emailError}</small>
-        <input
-          type="password"
-          placeholder="Password"
-          autoComplete="password"
-          value={password}
-          onChange={(e) => setPassword(e.target.value)}
-          aria-invalid={passwordError ? "true" : undefined}
-          aria-describedby="password-valid"
-        />
-        <small id="password-valid">{passwordError}</small>
-          <button type="submit" disabled={loading} onClick={handleLogin}>
-            Login
-          </button>
+          <input
+            type="email"
+            placeholder="Email"
+            autoComplete="email"
+            value={email}
+            onChange={(e) => setEmail(e.target.value)}
+            aria-invalid={emailError ? "true" : undefined}
+            aria-describedby="email-valid"
+          />
+          <small id="email-valid">{emailError}</small>
+          <input
+            type="password"
+            placeholder="Password"
+            autoComplete="password"
+            value={password}
+            onChange={(e) => setPassword(e.target.value)}
+            aria-invalid={passwordError ? "true" : undefined}
+            aria-describedby="password-valid"
+          />
+          <small id="password-valid">{passwordError}</small>
+          <fieldset role="group"> 
+            <button type="button" className={'secondary'} onClick={handleResetPassword}>Reset Password</button>
+            <button type="submit" onClick={handleLogin}>Login</button>
+          </fieldset>
         </form>
       </article>
     </main>

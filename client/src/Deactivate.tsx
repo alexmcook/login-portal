@@ -6,7 +6,7 @@ export const Deactivate = ({ onConfirm, onCancel }: { onConfirm: () => void; onC
 
   const handleCancel = () => {
     onCancel(false);
-  }
+  };
 
   const handleDeactivate = async () => {
     if (password.length === 0) {
@@ -14,7 +14,7 @@ export const Deactivate = ({ onConfirm, onCancel }: { onConfirm: () => void; onC
       return;
     }
     onConfirm(password);
-  }
+  };
 
   return (
     <dialog open>
@@ -39,4 +39,4 @@ export const Deactivate = ({ onConfirm, onCancel }: { onConfirm: () => void; onC
       </form>
     </dialog>
   );
-}
+};

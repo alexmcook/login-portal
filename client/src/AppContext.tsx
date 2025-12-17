@@ -10,8 +10,8 @@ export const AppProvider = ({ children }: { children: React.ReactNode }) => {
       {children}
     </AppContext.Provider>
   );
-}
+};
 
 export const useAppContext = () => {
   return useContext(AppContext);
-}
+};

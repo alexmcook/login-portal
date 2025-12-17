@@ -17,4 +17,4 @@ export const Notice = ({ message, url }: { message: string; url: string }) => {
       </article>
     </dialog>
   );
-}
+};
