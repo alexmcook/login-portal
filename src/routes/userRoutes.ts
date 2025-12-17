@@ -103,7 +103,7 @@ export async function userRoutes(fastify: FastifyInstance, _options: FastifyPlug
     return reply.code(400).send({ ok: false });
   });
 
-  fastify.post('/delete', async (request, reply) => {
+  fastify.post('/deactivate', async (request, reply) => {
     const sid = request.cookies?.sid as string | undefined;
     if (!sid) {
       return reply.code(400).send({ ok: false });
@@ -127,13 +127,13 @@ export async function userRoutes(fastify: FastifyInstance, _options: FastifyPlug
         return reply.code(401).send({ error: 'invalid credentials' });
       }
 
-      // delete user
+      // deactivate user
       await userRepo.deleteUser(uid);
       await session.destroy(reply, sid);
       return reply.code(200).send({ ok: true });
     } catch (err) {
       request.log.error(err);
-      return reply.code(500).send({ error: 'deletion failed' });
+      return reply.code(500).send({ error: 'deactivation failed' });
     }
   });
 

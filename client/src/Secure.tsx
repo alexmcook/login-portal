@@ -1,11 +1,13 @@
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAppContext } from './AppContext.js';
-import { secure, logout, type UserData } from './api.js';
+import { secure, logout, deactivate, type UserData } from './api.js';
+import { Deactivate } from './Deactivate.js';
 
 export const Secure = () => {
   const [userData, setUserData] = useState<UserData | null>(null);
   const [loading, setLoading] = useState<boolean>(true);
+  const [promptDeactivate, setPromptDeactivate] = useState<boolean>(false);
 
   useEffect(() => {
     const fetchSecureData = async () => {
@@ -30,6 +32,18 @@ export const Secure = () => {
     navigate('/', { replace: true });
   }
 
+  const handleDeactivate = async () => {
+    setPromptDeactivate(true);
+  }
+
+  const confirmDeactivate = async (password: string) => {
+    await deactivate(password);
+    setPromptDeactivate(false);
+    await logout();
+    setIsAuthed(false);
+    navigate('/', { replace: true });
+  }
+
   const getDateTime = (dateString: string) => {
     const date = new Date(dateString);
     return date.toLocaleString('en-US', {
@@ -49,6 +63,9 @@ export const Secure = () => {
 
   return (
     <main className="container">
+      {promptDeactivate && (
+        <Deactivate onConfirm={confirmDeactivate} onCancel={setPromptDeactivate} />
+      )}
       <article>
         <h1>Secure Page</h1>
         <hr />
@@ -64,7 +81,10 @@ export const Secure = () => {
         <p><small>{getDateTime(userData.last_login)}</small></p>
       </article>
       <footer className="container">
-        {isAuthed && <button onClick={handleLogout}>Logout</button>}
+        <fieldset role="group">
+          {isAuthed && <button onClick={handleLogout}>Logout</button>}
+          {isAuthed && <button className={'secondary'} onClick={handleDeactivate}>Deactivate</button>}
+        </fieldset>
       </footer>
     </main>
   );

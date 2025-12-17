@@ -12,6 +12,7 @@ export type UserRepo = {
   setLastLogin(id: string): Promise<void>
   createActivationUrl(userId: string): Promise<string>
   activateUser(token: string): Promise<UserResult>
+  deleteUser(userId: string): Promise<void>
 };
 
 export const userRepo: UserRepo = {
@@ -20,7 +21,8 @@ export const userRepo: UserRepo = {
   createUser,
   setLastLogin,
   createActivationUrl,
-  activateUser
+  activateUser,
+  deleteUser
 };
 
 async function findById(id: string): Promise<UserResult> {

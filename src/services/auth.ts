@@ -9,7 +9,7 @@ export type AuthService = {
   registerUser(email: string, password: string): Promise<{ ok: boolean; activationUrl?: string; code?: number; message?: string }>
   activateUser(token: string): Promise<{ ok: boolean; code?: number; message?: string }>
   verifyUser(email: string, password: string): Promise<{ ok: boolean; userId: string, code?: number; message?: string }>
-  deleteUser(userId: string, password: string): Promise<{ ok: boolean; code?: number; message?: string }>
+  deactivateUser(userId: string, password: string): Promise<{ ok: boolean; code?: number; message?: string }>
 }
 
 export function setupAuth(userRepo: UserRepo, hashProvider: HashProvider): AuthService {
@@ -17,7 +17,7 @@ export function setupAuth(userRepo: UserRepo, hashProvider: HashProvider): AuthS
     registerUser: (email: string, password: string) => registerUser(userRepo, hashProvider, email, password),
     activateUser: (token: string) => activateUser(userRepo, token),
     verifyUser: (email: string, password: string) => verifyUser(userRepo, hashProvider, email, password),
-    deleteUser: (userId: string, password: string) => deleteUser(userRepo, hashProvider, userId, password)
+    deactivateUser: (userId: string, password: string) => deactivateUser(userRepo, hashProvider, userId, password)
   }
 }
 
@@ -45,7 +45,7 @@ async function verifyUser(userRepo: UserRepo, hashProvider: HashProvider, email:
   return { ok: true, userId: result.user!.id! };
 }
 
-async function deleteUser(userRepo: UserRepo, hashProvider: HashProvider, userId: string, password: string) {
+async function deactivateUser(userRepo: UserRepo, hashProvider: HashProvider, userId: string, password: string) {
   const userResult = await userRepo.findById(id);
   if (!userResult.success) return { ok: false, code: 404, message: 'user not found' };
   const verifyResult = await verifyUser(userRepo, hashProvider, userResult.user!.email!, password);

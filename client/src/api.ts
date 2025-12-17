@@ -73,3 +73,18 @@ export async function activate(token: string): Promise<DataResponse> {
     return { ok: false, error: 'network error' };
   }
 }
+
+export async function deactivate(password: string): Promise<DataResponse> {
+  try {
+    const response = await fetch(`${API_PATH}/deactivate`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ password }),
+      credentials: 'include'
+    });
+    return await response.json();
+  } catch (err) {
+    console.error(err);
+    return { ok: false, error: 'network error' };
+  }
+}
