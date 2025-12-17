@@ -41,7 +41,7 @@ export const Register = ({ setIsAuthed }: { setIsAuthed: (value: boolean) => voi
       return true;
     }
     const re = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-    return re.test(String(email).toLowerCase());
+    return re.test(email.toLowerCase());
   }
 
   const validatePassword = (password: string): string => {
