@@ -4,6 +4,7 @@ import { setupAuth } from '../services/auth.js'
 import { userRepo } from '../repositories/user.js'
 import { session } from '../services/session.js'
 import { sendEmail } from '../services/email.js'
+import { validateEmail, validatePassword } from '../utils/validator.js';
 
 const { registerUser, activateUser, verifyUser } = setupAuth(userRepo, {
   hash: async (password, options) => {
@@ -45,8 +46,8 @@ export async function userRoutes(fastify: FastifyInstance, _options: FastifyPlug
 
   fastify.post('/register', async (request, reply) => {
     const body = request.body as { email?: string; password?: string };
-    if (!body || typeof body.email !== 'string' || typeof body.password !== 'string') {
-      return reply.code(400).send({ error: 'email and password are required' });
+    if (!validateEmail(body?.email) || !validatePassword(body?.password)) {
+      return reply.code(400).send({ error: 'invalid email or password format' });
     }
     try {
       const result = await registerUser(body.email, body.password);
