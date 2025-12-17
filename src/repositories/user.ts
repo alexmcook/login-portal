@@ -13,6 +13,8 @@ export type UserRepo = {
   createActivationUrl(userId: string): Promise<string>
   activateUser(token: string): Promise<UserResult>
   deleteUser(userId: string): Promise<void>
+  createPasswordResetUrl(email: string): Promise<{ success: boolean; url?: string }>
+  updatePassword(token: string, newPassword: string): Promise<boolean>
 };
 
 export const userRepo: UserRepo = {
@@ -22,7 +24,9 @@ export const userRepo: UserRepo = {
   setLastLogin,
   createActivationUrl,
   activateUser,
-  deleteUser
+  deleteUser,
+  createPasswordResetUrl,
+  updatePassword
 };
 
 async function findById(id: string): Promise<UserResult> {
@@ -78,4 +82,31 @@ async function activateUser(token: string): Promise<UserResult> {
 
 async function deleteUser(userId: string): Promise<void> {
   await query('DELETE FROM users WHERE id = $1', [userId]);
+}
+
+async function createPasswordResetUrl(email: string): Promise<{ success: boolean; url?: string }> {
+  const userResult = await findByEmail(email);
+  if (!userResult.success || !userResult.user) {
+    return { success: false };
+  }
+  const token = crypto.randomBytes(32).toString('hex');
+  const hmac = crypto.createHmac('sha256', process.env.PASSWORD_RESET_SECRET);
+  hmac.update(token);
+  const tokenHash = hmac.digest('hex');
+  
+  const expiration = 60 * 60; // 1 hour
+  await redis.set(tokenHash, userId, expiration);
+  return { success: true, url: `${process.env.APP_URL}/reset?token=${token}` };
+}
+
+async function updatePassword(token: string, newPassword: string): Promise<UserResult> {
+  const hmac = crypto.createHmac('sha256', process.env.PASSWORD_RESET_SECRET);
+  hmac.update(token);
+  const tokenHash = hmac.digest('hex');
+
+  const userId = await redis.get(tokenHash);
+  if (!userId) return false;
+  await query('UPDATE users SET password_hash = $1 WHERE id = $2', [newPasswordHash, userId]);
+  await redis.del(tokenHash);
+  return { success: true };
 }

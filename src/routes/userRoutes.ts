@@ -6,7 +6,7 @@ import { session } from '../services/session.js'
 import { sendEmail } from '../services/email.js'
 import { validateEmail, validatePassword } from '../utils/validator.js';
 
-const { registerUser, activateUser, verifyUser } = setupAuth(userRepo, {
+const { registerUser, activateUser, verifyUser, resetPassword } = setupAuth(userRepo, {
   hash: async (password, options) => {
     return argon2.hash(password, { timeCost: options?.timeCost ?? 3 });
   },
@@ -144,7 +144,7 @@ export async function userRoutes(fastify: FastifyInstance, _options: FastifyPlug
     }
 
     try {
-      const uid = String(session.uid);
+      const uid = session.uid;
       const res = await userRepo.findById(uid);
       if (!res.success || !res.user) {
         return reply.code(401).send({ error: 'unauthorized' });
@@ -157,9 +157,50 @@ export async function userRoutes(fastify: FastifyInstance, _options: FastifyPlug
     }
   });
 
-  // small test route (registered at top level, not inside /secure handler)
-  fastify.get('/test', async (request, reply) => {
-    await sendEmail('test@example.com', 'Test Subject', 'This is a test email body');
-    return reply.code(200).send({ ok: true });
+  fastify.post('/reset', async (request, reply) => {
+    const body = request.body as { email?: string };
+    if (!body || typeof body.email !== 'string' || !validateEmail(body.email)) {
+      return reply.code(400).send({ error: 'valid email is required' });
+    }
+
+    try {
+      // Create password reset token and send email
+      const result = await userRepo.createPasswordResetToken(body.email);
+      if (!result.success) {
+        return reply.code(200).send({ ok: true }); // avoid revealing user existence
+      }
+      const resetUrl = result.url;
+      if (process.env.NODE_ENV !== 'production') {
+        return reply.code(201).send({ ok: true, resetUrl: result.url });
+      } else {
+        // send activation email
+        return reply.code(201).send({ ok: true });
+      }
+      return reply.code(200).send({ ok: true });
+    } catch (err) {
+      request.log.error(err);
+      return reply.code(500).send({ error: 'password reset failed' });
+    }
+  });
+
+  fastify.post('/set', async (request, reply) => {
+    const body = request.body as { password?: string };
+    if (!body || typeof body.password !== 'string' || !validatePassword(body.password)) {
+      return reply.code(400).send({ error: 'invalid password format' });
+    }
+
+    const token = (request.query as { token?: string })?.token;
+    if (!token || typeof token !== 'string') {
+      return reply.code(400).send({ error: 'reset token is required' });
+    }
+
+    try {
+      const result = await userRepo.resetPassword(token, body.password);
+      if (!result.success) return reply.code(400).send({ error: 'invalid or expired reset link' });
+      return reply.code(200).send({ ok: true });
+    } catch (err) {
+      request.log.error(err);
+      return reply.code(500).send({ error: 'password reset failed' });
+    }
   });
 }

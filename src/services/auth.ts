@@ -10,6 +10,7 @@ export type AuthService = {
   activateUser(token: string): Promise<{ ok: boolean; code?: number; message?: string }>
   verifyUser(email: string, password: string): Promise<{ ok: boolean; userId: string, code?: number; message?: string }>
   deactivateUser(userId: string, password: string): Promise<{ ok: boolean; code?: number; message?: string }>
+  resetPassword(userId: string, newPassword: string): Promise<{ ok: boolean; code?: number; message?: string }>
 }
 
 export function setupAuth(userRepo: UserRepo, hashProvider: HashProvider): AuthService {
@@ -17,7 +18,8 @@ export function setupAuth(userRepo: UserRepo, hashProvider: HashProvider): AuthS
     registerUser: (email: string, password: string) => registerUser(userRepo, hashProvider, email, password),
     activateUser: (token: string) => activateUser(userRepo, token),
     verifyUser: (email: string, password: string) => verifyUser(userRepo, hashProvider, email, password),
-    deactivateUser: (userId: string, password: string) => deactivateUser(userRepo, hashProvider, userId, password)
+    deactivateUser: (userId: string, email: string) => deactivateUser(userRepo, hashProvider, userId, email),
+    resetPassword: (userId: string, newPassword: string) => resetPassword(userRepo, hashProvider, userId, newPassword)
   }
 }
 
@@ -51,5 +53,14 @@ async function deactivateUser(userRepo: UserRepo, hashProvider: HashProvider, us
   const verifyResult = await verifyUser(userRepo, hashProvider, userResult.user!.email!, password);
   if (!verifyResult.ok) return { ok: false, code: verifyResult.code, message: verifyResult.message };
   await userRepo.deleteUser(userId);
+  return { ok: true };
+}
+
+async function resetPassword(userRepo: UserRepo, hashProvider: HashProvider, userId: string, newPassword: string) {
+  const userResult = await userRepo.findById(userId);
+  if (!userResult.success) return { ok: false, code: 404, message: 'user not found' };
+  const hashedPassword = await hashProvider.hash(newPassword, { timeCost: 3 });
+  const updateResult = await userRepo.updatePassword(userResult.user!.id!, hashedPassword);
+  if (!updateResult.success) return { ok: false, code: 500, message: 'failed to update password' };
   return { ok: true };
 }
