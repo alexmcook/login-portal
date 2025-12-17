@@ -52,15 +52,24 @@ async function createActivationUrl(userId: string): Promise<string> {
   const appUrl = process.env.APP_URL;
   if (!appUrl) throw new Error('APP_URL is not defined');
   const token = crypto.randomBytes(32).toString('hex');
+
+  const hmac = crypto.createHmac('sha256', process.env.ACTIVATION_SECRET);
+  hmac.update(token);
+  const tokenHash = hmac.digest('hex');
+
   const expiration = 24 * 60 * 60; // 24 hours
-  await redis.set(token, userId, expiration);
+  await redis.set(tokenHash, userId, expiration);
   return `${appUrl}/activate?token=${token}`;
 }
 
 async function activateUser(token: string): Promise<UserResult> {
-  const userId = await redis.get(token);
+  const hmac = crypto.createHmac('sha256', process.env.ACTIVATION_SECRET);
+  hmac.update(token);
+  const tokenHash = hmac.digest('hex');
+
+  const userId = await redis.get(tokenHash);
   if (!userId) return { success: false };
   await query('UPDATE users SET is_active = TRUE WHERE id = $1', [userId]);
-  await redis.del(token);
+  await redis.del(tokenHash);
   return { success: true };
 }
