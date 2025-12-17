@@ -52,8 +52,12 @@ export async function userRoutes(fastify: FastifyInstance, _options: FastifyPlug
     try {
       const result = await registerUser(body.email, body.password);
       if (!result.ok) return reply.code(result.code ?? 400).send({ error: result.message });
-      console.log(`Activation link for ${body.email}: ${result.activationLink}`);
-      return reply.code(201).send({ ok: true, activationLink: result.activationLink });
+      if (process.env.NODE_ENV !== 'production') {
+        return reply.code(201).send({ ok: true, activationUrl: result.activationUrl });
+      } else {
+        // send activation email
+        return reply.code(201).send({ ok: true });
+      }
     } catch (err) {
       request.log.error(err);
       return reply.code(500).send({ error: 'registration failed' });

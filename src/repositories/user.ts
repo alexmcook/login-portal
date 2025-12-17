@@ -10,7 +10,7 @@ export type UserRepo = {
   findById(id: string): Promise<UserResult>
   createUser(email: string, passwordHash: string): Promise<UserResult>
   setLastLogin(id: string): Promise<void>
-  createActivationLink(userId: string): Promise<string>
+  createActivationUrl(userId: string): Promise<string>
   activateUser(token: string): Promise<UserResult>
 };
 
@@ -19,7 +19,7 @@ export const userRepo: UserRepo = {
   findByEmail,
   createUser,
   setLastLogin,
-  createActivationLink,
+  createActivationUrl,
   activateUser
 };
 
@@ -48,7 +48,7 @@ async function setLastLogin(id: string): Promise<void> {
   await query('UPDATE users SET last_login = NOW() WHERE id = $1', [id]);
 }
 
-async function createActivationLink(userId: string): Promise<string> {
+async function createActivationUrl(userId: string): Promise<string> {
   const appUrl = process.env.APP_URL;
   if (!appUrl) throw new Error('APP_URL is not defined');
   const token = crypto.randomBytes(32).toString('hex');

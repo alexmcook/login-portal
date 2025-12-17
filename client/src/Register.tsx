@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react'
 import { useNavigate } from 'react-router-dom';
-import { register } from './api.js'
+import { register, secure } from './api.js'
+import { Notice } from './Notice.js'
 
 export const Register = ({ setIsAuthed }: { setIsAuthed: (value: boolean) => void }) => {
   const [email, setEmail] = useState('');
@@ -8,6 +9,8 @@ export const Register = ({ setIsAuthed }: { setIsAuthed: (value: boolean) => voi
   const [emailError, setEmailError] = useState('');
   const [passwordError, setPasswordError] = useState('');
   const [loading, setLoading] = useState(false);
+  const [activationUrl, setActivationUrl] = useState('');
+  const [showNotice, setShowNotice] = useState(false);
 
   useEffect(() => {
     const checkAuth = async () => {
@@ -23,16 +26,24 @@ export const Register = ({ setIsAuthed }: { setIsAuthed: (value: boolean) => voi
 
   const handleRegister = async (event: React.MouseEvent<HTMLButtonElement> | React.FormEvent<HTMLFormElement>) => {
     event.preventDefault();
-    if (emailError || passwordError) {
+    if (email.length === 0) {
+      setEmailError('Email is required');
+    }
+    if (password.length === 0) {
+      setPasswordError('Password is required');
+    }
+    if (emailError || passwordError || email.length === 0 || password.length === 0) {
       return;
     }
     setLoading(true);
     const result = await register(email, password);
     setLoading(false);
     if (!result.ok) {
-      setPasswordError('Registration failed: ' + (result.error || 'unknown error'));
+      setPasswordError('Registration failed: ' + (result.error ?? 'unknown error'));
     } else {
-      navigate('/');
+      setActivationUrl(result.activationUrl);
+      setShowNotice(true);
+      //navigate('/');
     }
   };
 
@@ -94,6 +105,8 @@ export const Register = ({ setIsAuthed }: { setIsAuthed: (value: boolean) => voi
   return (
     <main className="container">
       <article>
+        {showNotice && !activationUrl && <Notice message={"Please check your email to activate your account!"} />}
+        {showNotice && activationUrl && <Notice message={"Because this email is not approved in the SES sandbox, a link will be shared directly."} url={activationUrl} />}
         <h1>Register</h1>
         <form onSubmit={handleRegister}>
         <input
@@ -112,11 +125,11 @@ export const Register = ({ setIsAuthed }: { setIsAuthed: (value: boolean) => voi
           autoComplete="password"
           value={password}
           onChange={handlePasswordChange}
-          aria-invalid={passwordError.length > 0 ? "true" : undefined}
+          aria-invalid={passwordError ? "true" : undefined}
           aria-describedby="password-valid"
         />
         <small id="password-valid">{passwordError}</small>
-          <button type="submit" disabled={loading || emailError || passwordError} onClick={handleRegister}>
+          <button type="submit" disabled={loading} onClick={handleRegister}>
             Register
           </button>
         </form>

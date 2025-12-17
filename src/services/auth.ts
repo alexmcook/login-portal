@@ -6,7 +6,7 @@ export type HashProvider = {
 }
 
 export type AuthService = {
-  registerUser(email: string, password: string): Promise<{ ok: boolean; activationLink?: string; code?: number; message?: string }>
+  registerUser(email: string, password: string): Promise<{ ok: boolean; activationUrl?: string; code?: number; message?: string }>
   activateUser(token: string): Promise<{ ok: boolean; code?: number; message?: string }>
   verifyUser(email: string, password: string): Promise<{ ok: boolean; userId: string, code?: number; message?: string }>
 }
@@ -23,8 +23,8 @@ async function registerUser(userRepo: UserRepo, hashProvider: HashProvider, emai
   const hashedPassword = await hashProvider.hash(password, { timeCost: 3 });
   const result = await userRepo.createUser(email, hashedPassword);
   if (!result.success) return { ok: false, code: 500, message: 'email already registered' };
-  const activationLink = await userRepo.createActivationLink(result.user.id);
-  return { ok: true, userId: result.user.id, activationLink: activationLink };
+  const activationUrl = await userRepo.createActivationUrl(result.user.id);
+  return { ok: true, userId: result.user.id, activationUrl: activationUrl };
 }
 
 async function activateUser(userRepo: UserRepo, token: string) {
