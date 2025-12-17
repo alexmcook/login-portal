@@ -1,6 +1,6 @@
 import { SESClient, SendEmailCommand } from '@aws-sdk/client-ses'
 
-const sesClient = new SESClient({});
+const sesClient = new SESClient({ region: process.env.AWS_REGION });
 
 export async function sendEmail(to: string, subject: string, body: string) {
     const sourceEmail = process.env.EMAIL_SOURCE;
