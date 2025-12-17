@@ -23,21 +23,14 @@ export const Register = ({ setIsAuthed }: { setIsAuthed: (value: boolean) => voi
 
   const handleRegister = async (event: React.MouseEvent<HTMLButtonElement> | React.FormEvent<HTMLFormElement>) => {
     event.preventDefault();
-    if (!email) {
-      setEmailError('Email is required');
-      return;
-    }
-    if (!password) {
-      setPasswordError('Password is required');
+    if (emailError || passwordError) {
       return;
     }
     setLoading(true);
-    setEmailError('');
-    setPasswordError('');
     const result = await register(email, password);
     setLoading(false);
     if (!result.ok) {
-      setError(result.error || 'Registration failed');
+      setPasswordError('Registration failed: ' + (result.error || 'unknown error'));
     } else {
       navigate('/');
     }
@@ -123,7 +116,7 @@ export const Register = ({ setIsAuthed }: { setIsAuthed: (value: boolean) => voi
           aria-describedby="password-valid"
         />
         <small id="password-valid">{passwordError}</small>
-          <button type="submit" disabled={loading} onClick={handleRegister}>
+          <button type="submit" disabled={loading || emailError || passwordError} onClick={handleRegister}>
             Register
           </button>
         </form>
