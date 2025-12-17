@@ -6,4 +6,4 @@ logs/
 client/node_modules/
 client/dist/
 
-*.http
+todo.txt
