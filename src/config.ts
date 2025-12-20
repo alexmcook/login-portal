@@ -28,7 +28,7 @@ function readSecret(envVar: string): string | undefined {
     return process.env[envVar];
   }
   try {
-    const fullPath = path.resolve('/run/secrets/', filePath);
+    const fullPath = path.resolve('/run/secrets/', envVar);
     return fs.readFileSync(fullPath, 'utf8').trim();
   } catch {
     return undefined;

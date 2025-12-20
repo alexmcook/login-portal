@@ -34,6 +34,41 @@ services:
       timeout: 5s
       retries: 5
 
+  api:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: login-portal-api
+    restart: unless-stopped
+    env_file: .env
+    environment:
+      - SERVER_PORT=${SERVER_PORT:-3000}
+      - POSTGRES_HOST=${POSTGRES_HOST}
+      - POSTGRES_PORT=${POSTGRES_PORT}
+      - POSTGRES_USER=${POSTGRES_USER}
+      - POSTGRES_DB=${POSTGRES_DB}
+      - REDIS_HOST=${REDIS_HOST}
+      - REDIS_PORT=${REDIS_PORT}
+    ports:
+      - "${SERVER_PORT:-3000}:3000"
+    volumes:
+      - ./.secrets:/run/secrets:ro
+    depends_on:
+      - db
+      - redis
+
+  client:
+    build:
+      context: client
+      dockerfile: Dockerfile
+    container_name: login-portal-client
+    restart: unless-stopped
+    env_file: .env
+    ports:
+      - "${CLIENT_PORT:-5173}:5173"
+    depends_on:
+      - api
+
 volumes:
   db_data:
   redis_data:
