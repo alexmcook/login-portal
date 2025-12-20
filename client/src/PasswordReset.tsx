@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react'
+import { useState } from 'react'
 import { resetPassword } from './api.js'
 import { utils } from './utils.js'
 import { Notice } from './Notice.js'

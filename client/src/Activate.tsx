@@ -10,16 +10,16 @@ export const Activate = () => {
   const [message, setMessage] = useState<string | null>(null);
 
   useEffect(() => {
-    if (!token) {
-      setStatus('error');
-      setMessage('Invalid activation token');
-      setTimeout(() => {
-        navigate('/', { replace: true });
-      }, 3000);
-      return;
-    }
-
     const activateAccount = async () => {
+      if (!token) {
+        setStatus('error');
+        setMessage('Invalid activation token');
+        setTimeout(() => {
+          navigate('/', { replace: true });
+        }, 3000);
+        return;
+      }
+
       setStatus('loading');
       setMessage('Activating your account, please wait...');
       const response = await activate(token);
@@ -36,7 +36,7 @@ export const Activate = () => {
     };
 
     activateAccount();
-  }, []);
+  }, [navigate, token]);
 
   return (
     <main className="container">

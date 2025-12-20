@@ -1,9 +1,8 @@
 import { useEffect, useState } from 'react'
-import { useAppContext } from './AppContext.js';
+import { useAppContext } from './useAppContext.js';
 import { useNavigate } from 'react-router-dom';
-import { login, secure, resetPassword } from './api.js'
+import { login, secure } from './api.js'
 import { PasswordReset } from './PasswordReset.js';
-import { utils } from './utils.js';
 
 export const Login = () => {
   const [email, setEmail] = useState('');
@@ -12,6 +11,9 @@ export const Login = () => {
   const [passwordError, setPasswordError] = useState('');
   const [loading, setLoading] = useState(false);
   const [promptResetPassword, setPromptResetPassword] = useState(false);
+
+  const navigate = useNavigate();
+  const { setIsAuthed } = useAppContext();
 
   useEffect(() => {
     const checkAuth = async () => {
@@ -22,11 +24,7 @@ export const Login = () => {
       }
     }
     checkAuth();
-  }, []);
-
-  const { isAuthed, setIsAuthed } = useAppContext();
-
-  const navigate = useNavigate();
+  });
 
   const handleLogin = async (event: React.MouseEvent<HTMLButtonElement> | React.FormEvent<HTMLFormElement>) => {
     event.preventDefault();
@@ -80,7 +78,7 @@ export const Login = () => {
           <small id="password-valid">{passwordError}</small>
           <fieldset role="group"> 
             <button type="button" className={'secondary'} onClick={handleResetPassword}>Reset Password</button>
-            <button type="submit" onClick={handleLogin}>Login</button>
+            <button type="submit" onClick={handleLogin}>{loading ? "Loading..." : "Submit"}</button>
           </fieldset>
         </form>
       </article>

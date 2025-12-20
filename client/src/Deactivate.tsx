@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react'
+import { useState } from 'react'
 
 export const Deactivate = ({ onConfirm, onCancel }: { onConfirm: () => void; onCancel: () => void }) => {
   const [password, setPassword] = useState('');

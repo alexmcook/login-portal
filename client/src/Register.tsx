@@ -21,7 +21,7 @@ export const Register = ({ setIsAuthed }: { setIsAuthed: (value: boolean) => voi
       }
     }
     checkAuth();
-  }, []);
+  }, [setIsAuthed]);
 
   const navigate = useNavigate();
 

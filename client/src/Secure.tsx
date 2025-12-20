@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { useAppContext } from './AppContext.js';
+import { useAppContext } from './useAppContext.js';
 import { secure, logout, deactivate, type UserData } from './api.js';
 import { Deactivate } from './Deactivate.js';
 
@@ -8,6 +8,8 @@ export const Secure = () => {
   const [userData, setUserData] = useState<UserData | null>(null);
   const [loading, setLoading] = useState<boolean>(true);
   const [promptDeactivate, setPromptDeactivate] = useState<boolean>(false);
+
+  const { isAuthed, setIsAuthed } = useAppContext();
 
   useEffect(() => {
     const fetchSecureData = async () => {
@@ -20,9 +22,7 @@ export const Secure = () => {
       setLoading(false);
     }
     fetchSecureData();
-  }, []);
-
-  const { isAuthed, setIsAuthed } = useAppContext();
+  }, [setIsAuthed]);
 
   const navigate = useNavigate();
 

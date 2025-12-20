@@ -1,6 +1,5 @@
-import { createContext, useContext, useState } from 'react';
-
-const AppContext = createContext(null);
+import { useState } from 'react';
+import { AppContext } from './appContextValue.js';
 
 export const AppProvider = ({ children }: { children: React.ReactNode }) => {
   const [isAuthed, setIsAuthed] = useState(false);
@@ -12,6 +11,3 @@ export const AppProvider = ({ children }: { children: React.ReactNode }) => {
   );
 };
 
-export const useAppContext = () => {
-  return useContext(AppContext);
-};
