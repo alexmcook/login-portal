@@ -27,7 +27,7 @@ await fastify.register(userRoutes, { prefix: '/api' });
 
 async function start() {
 	try {
-		await fastify.listen({ port: config.SERVER_PORT });
+		await fastify.listen({ port: Number(config.SERVER_PORT ?? 3000) });
 		fastify.log.info('server started');
 	} catch (err) {
 		fastify.log.error(err);

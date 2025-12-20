@@ -3,9 +3,9 @@ import { config } from '../config.js';
 
 export const redis = { exists, set, get, del, expire, quit };
 
-const clientPromise: Promise<RedisClientType> = init();
+const clientPromise: Promise<any> = init();
 
-async function init(): Promise<RedisClientType> {
+async function init(): Promise<any> {
   const host = config.REDIS_HOST;
   const port = config.REDIS_PORT;
   const password = config.REDIS_PASSWORD;

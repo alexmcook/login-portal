@@ -9,11 +9,11 @@ export type HashProvider = {
 }
 
 export type AuthService = {
-  registerUser(email: string, password: string): Promise<{ ok: boolean; activationUrl?: string; code?: number; message?: string }>
+  registerUser(email: string, password: string): Promise<{ ok: boolean; activationUrl?: string; userId?: string; code?: number; message?: string }>
   activateUser(token: string): Promise<{ ok: boolean; code?: number; message?: string }>
-  verifyUser(email: string, password: string): Promise<{ ok: boolean; userId: string, code?: number; message?: string }>
-  deactivateUser(userId: string, password: string): Promise<{ ok: boolean; code?: number; message?: string }>
-  updatePassword(userId: string, newPassword: string): Promise<{ ok: boolean; code?: number; message?: string }>
+  verifyUser(email: string, password: string): Promise<{ ok: boolean; userId?: string; code?: number; message?: string }>
+  deactivateUser(userId: string, password: string): Promise<{ ok: boolean; code?: number | undefined; message?: string | undefined }>
+  updatePassword(token: string, newPassword: string): Promise<{ ok: boolean; code?: number; message?: string }>
 }
 
 export function setupAuth(userRepo: UserRepo, hashProvider: HashProvider): AuthService {
@@ -21,7 +21,7 @@ export function setupAuth(userRepo: UserRepo, hashProvider: HashProvider): AuthS
     registerUser: (email: string, password: string) => registerUser(userRepo, hashProvider, email, password),
     activateUser: (token: string) => activateUser(userRepo, token),
     verifyUser: (email: string, password: string) => verifyUser(userRepo, hashProvider, email, password),
-    deactivateUser: (userId: string, email: string) => deactivateUser(userRepo, hashProvider, userId, email),
+    deactivateUser: (userId: string, password: string) => deactivateUser(userRepo, hashProvider, userId, password),
     updatePassword: (userId: string, newPassword: string) => updatePassword(userRepo, hashProvider, userId, newPassword)
   }
 }
@@ -30,8 +30,8 @@ async function registerUser(userRepo: UserRepo, hashProvider: HashProvider, emai
   const hashedPassword = await hashProvider.hash(password, { timeCost: 3 });
   const result = await userRepo.createUser(email, hashedPassword);
   if (!result.success) return { ok: false, code: 500, message: 'email already registered' };
-  const activationUrl = await userRepo.createActivationUrl(result.user.id);
-  return { ok: true, userId: result.user.id, activationUrl: activationUrl };
+  const activationUrl = await userRepo.createActivationUrl(result.user!.id);
+  return { ok: true, userId: result.user!.id, activationUrl: activationUrl };
 }
 
 async function activateUser(userRepo: UserRepo, token: string) {
@@ -51,7 +51,7 @@ async function verifyUser(userRepo: UserRepo, hashProvider: HashProvider, email:
 }
 
 async function deactivateUser(userRepo: UserRepo, hashProvider: HashProvider, userId: string, password: string) {
-  const userResult = await userRepo.findById(id);
+  const userResult = await userRepo.findById(userId);
   if (!userResult.success) return { ok: false, code: 404, message: 'user not found' };
   const verifyResult = await verifyUser(userRepo, hashProvider, userResult.user!.email!, password);
   if (!verifyResult.ok) return { ok: false, code: verifyResult.code, message: verifyResult.message };
@@ -60,7 +60,7 @@ async function deactivateUser(userRepo: UserRepo, hashProvider: HashProvider, us
 }
 
 async function updatePassword(userRepo: UserRepo, hashProvider: HashProvider, token: string, newPassword: string) {
-  const hmac = crypto.createHmac('sha256', config.PASSWORD_RESET_SECRET);
+  const hmac = crypto.createHmac('sha256', String(config.PASSWORD_RESET_SECRET));
   hmac.update(token);
   const tokenHash = hmac.digest('hex');
 

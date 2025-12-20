@@ -47,11 +47,11 @@ export async function userRoutes(fastify: FastifyInstance, _options: FastifyPlug
 
   fastify.post('/register', async (request, reply) => {
     const body = request.body as { email?: string; password?: string };
-    if (!validateEmail(body?.email) || !validatePassword(body?.password)) {
+    if (!validateEmail(body?.email ?? '') || !validatePassword(body?.password ?? '')) {
       return reply.code(400).send({ error: 'invalid email or password format' });
     }
     try {
-      const result = await registerUser(body.email, body.password);
+      const result = await registerUser(body.email ?? '', body.password ?? '');
       if (!result.ok) return reply.code(result.code ?? 400).send({ error: result.message });
       if (config.NODE_ENV !== 'production') {
         return reply.code(201).send({ ok: true, activationUrl: result.activationUrl });
@@ -68,7 +68,7 @@ export async function userRoutes(fastify: FastifyInstance, _options: FastifyPlug
   fastify.post('/activate', async (request, reply) => {
     const body = request.body as { token?: string };
     try {
-      const result = await activateUser(body.token);
+      const result = await activateUser(body.token ?? '');
       if (!result.ok) return reply.code(result.code ?? 400).send({ error: result.message });
       return reply.code(200).send({ ok: true });
     } catch (err) {
@@ -88,7 +88,7 @@ export async function userRoutes(fastify: FastifyInstance, _options: FastifyPlug
       
       if (!result.ok) return reply.code(result.code ?? 400).send({ error: result.message });
 
-      return await finalizeLogin(request, reply, result.userId);
+      return await finalizeLogin(request, reply, result.userId!);
     } catch (err) {
       request.log.error(err);
       return reply.code(500).send({ error: 'login failed' });

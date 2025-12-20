@@ -21,7 +21,7 @@ function generateSid(): string {
   return crypto.randomBytes(16).toString('hex');
 }
 
-async function create(reply: FastifyReply, uid: String): Promise<string> {
+async function create(reply: FastifyReply, uid: string): Promise<string> {
   const sid = generateSid();
   const key = sidToKey(sid);
   await redis.set(key, uid, SESSION_TTL);

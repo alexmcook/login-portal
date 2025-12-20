@@ -4,7 +4,7 @@ import crypto from 'crypto';
 import { config } from '../config.js';
 
 export type UserResult = { success: boolean, user?: UserRow };
-export type UserRow = { id?: string; email?: string; password_hash?: string, created_at?: Date, updated_at?: Date, last_login?: Date, is_active?: boolean };
+export type UserRow = { id: string; email?: string; password_hash?: string, created_at?: Date, updated_at?: Date, last_login?: Date, is_active?: boolean };
 
 export type UserRepo = {
   findByEmail(email: string): Promise<UserResult>
@@ -15,7 +15,7 @@ export type UserRepo = {
   activateUser(token: string): Promise<UserResult>
   deleteUser(userId: string): Promise<void>
   createPasswordResetUrl(email: string): Promise<{ success: boolean; url?: string }>
-  updatePassword(token: string, newPassword: string): Promise<boolean>
+  updatePassword(userId: string, newPasswordHash: string): Promise<void>
 };
 
 export const userRepo: UserRepo = {
@@ -33,13 +33,13 @@ export const userRepo: UserRepo = {
 async function findById(id: string): Promise<UserResult> {
   const result = await query('SELECT id, email, password_hash, created_at, updated_at, last_login FROM users WHERE id = $1', [id]);
   if (result.rows.length === 0) return { success: false };
-  return { success: true, user: { ...result.rows[0] }};
+  return { success: true, user: result.rows[0] as UserRow };
 }
 
 async function findByEmail(email: string): Promise<UserResult> {
   const result = await query('SELECT id, email, password_hash, is_active FROM users WHERE email = $1', [email]);
   if (result.rows.length === 0) return { success: false };
-  return { success: true, user: { ...result.rows[0] }};
+  return { success: true, user: result.rows[0] as UserRow };
 }
 
 async function createUser(email: string, passwordHash: string): Promise<UserResult> {
@@ -48,7 +48,7 @@ async function createUser(email: string, passwordHash: string): Promise<UserResu
     [email, passwordHash]
   );
   if (result.rows.length === 0) return { success: false };
-  return { success: true, user: { ...result.rows[0] }};
+  return { success: true, user: result.rows[0] as UserRow };
 }
 
 async function setLastLogin(id: string): Promise<void> {
@@ -58,7 +58,7 @@ async function setLastLogin(id: string): Promise<void> {
 async function createActivationUrl(userId: string): Promise<string> {
   const token = crypto.randomBytes(32).toString('hex');
 
-  const hmac = crypto.createHmac('sha256', config.ACTIVATION_SECRET);
+  const hmac = crypto.createHmac('sha256', String(config.ACTIVATION_SECRET));
   hmac.update(token);
   const tokenHash = hmac.digest('hex');
 
@@ -71,7 +71,7 @@ async function createActivationUrl(userId: string): Promise<string> {
 }
 
 async function activateUser(token: string): Promise<UserResult> {
-  const hmac = crypto.createHmac('sha256', config.ACTIVATION_SECRET);
+  const hmac = crypto.createHmac('sha256', String(config.ACTIVATION_SECRET));
   hmac.update(token);
   const tokenHash = hmac.digest('hex');
 
@@ -92,7 +92,7 @@ async function createPasswordResetUrl(email: string): Promise<{ success: boolean
     return { success: false };
   }
   const token = crypto.randomBytes(32).toString('hex');
-  const hmac = crypto.createHmac('sha256', config.PASSWORD_RESET_SECRET);
+  const hmac = crypto.createHmac('sha256', String(config.PASSWORD_RESET_SECRET));
   hmac.update(token);
   const tokenHash = hmac.digest('hex');
 
