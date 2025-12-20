@@ -1,7 +1,7 @@
-import { SESClient, SendEmailCommand } from '@aws-sdk/client-ses'
+//import { SESClient, SendEmailCommand } from '@aws-sdk/client-ses'
 import { config } from '../config.js'
 
-const sesClient = new SESClient({ region: config.AWS_REGION });
+//const sesClient = new SESClient({ region: config.AWS_REGION });
 
 export async function sendEmail(to: string, subject: string, body: string) {
     const sourceEmail = config.EMAIL_SOURCE;
@@ -21,14 +21,13 @@ export async function sendEmail(to: string, subject: string, body: string) {
             Subject: { Data: subject },
         }
     };
+    void params;
 
     try {
-        const command = new SendEmailCommand(params);
-        console.log('Email command prepared:', command);
-        return true;
+        //const command = new SendEmailCommand(params);
         //return await sesClient.send(command);
-    } catch (error) {
-        console.error('Error sending email:', error);
+        return true;
+    } catch { 
         throw new Error('Failed to send email');
     }
 }

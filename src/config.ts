@@ -21,7 +21,7 @@ export const config = {
   APP_URL: process.env.APP_URL,
 }
 
-console.log(config);
+
 
 function readSecret(envVar: string): string | undefined {
   if (process.env[envVar]) {

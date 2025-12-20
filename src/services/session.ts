@@ -41,11 +41,7 @@ async function get(sid: string | undefined) {
   const key = sidToKey(sid);
   const value = await redis.get(key);
   if (!value) return null;
-  try {
-    return value;
-  } catch (err) {
-    return null;
-  }
+  return value;
 }
 
 async function destroy(reply: FastifyReply, sid?: string) {

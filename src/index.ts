@@ -16,7 +16,7 @@ if (config.COOKIE_SECRET) {
 }
 
 const protocol = config.NODE_ENV === 'production' ? 'https' : 'http';
-console.log(`CORS origin set to: ${protocol}://${config.APP_URL}`);
+fastify.log.info(`CORS origin set to: ${protocol}://${config.APP_URL}`);
 fastify.register(cors, {
 	origin: `${protocol}://${config.APP_URL}`,
 	credentials: true,

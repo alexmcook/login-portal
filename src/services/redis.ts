@@ -16,7 +16,7 @@ async function init(): Promise<RedisClientType> {
     redisUrl = `redis://${host}:${port}`;
   }
   const client = createClient({ url: redisUrl });
-  client.on('error', (err) => console.error('Redis error', err));
+  client.on('error', (err) => process.stderr.write(`Redis error ${String(err)}\n`));
   await client.connect();
   return client;
 }

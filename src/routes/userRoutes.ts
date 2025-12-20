@@ -3,7 +3,7 @@ import * as argon2 from 'argon2';
 import { setupAuth } from '../services/auth.js'
 import { userRepo } from '../repositories/user.js'
 import { session } from '../services/session.js'
-import { sendEmail } from '../services/email.js'
+
 import { validateEmail, validatePassword } from '../utils/validator.js';
 import { config } from '../config.js';
 
@@ -37,7 +37,7 @@ export async function userRoutes(fastify: FastifyInstance, _options: FastifyPlug
       const value = await session.get(sid);
       request.session = { uid: value };
       if (value) {
-        void session.refreshTtl(sid).catch(() => {});
+        await session.refreshTtl(sid);
       }
     } catch (err) {
       request.log.warn({ err }, 'session load failed');
@@ -169,7 +169,7 @@ export async function userRoutes(fastify: FastifyInstance, _options: FastifyPlug
       if (!result.success) {
         return reply.code(200).send({ ok: true }); // avoid revealing user existence
       }
-      const resetUrl = result.url;
+
       if (config.NODE_ENV !== 'production') {
         return reply.code(201).send({ ok: true, resetUrl: result.url });
       } else {
