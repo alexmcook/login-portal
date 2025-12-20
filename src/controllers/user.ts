@@ -2,7 +2,7 @@ import { userRepo } from '../repositories/user.js'
 import { session } from '../services/session.js'
 import { validateEmail, validatePassword } from '../utils/validator.js';
 import { config } from '../config.js';
-import { auth, type AuthService } from '../services/authFactory.js';
+import * as auth from '../services/authFactory.js';
 
 export { preHandler, registerHandler, activateHandler, loginHandler, logoutHandler, deactivateHandler, secureHandler, resetHandler, setHandler };
 
@@ -68,8 +68,6 @@ async function loginHandler(request: FastifyRequest, reply: FastifyReply) {
     
     if (!result.ok) return reply.code(result.code ?? 400).send({ error: result.message });
 
-    return await finalizeLogin(request, reply, result.userId!);
-
     const userId = result.userId!;
     try {
       await session.create(reply, userId);
@@ -107,7 +105,7 @@ async function deactivateHandler(request: FastifyRequest, reply: FastifyReply) {
   }
 
   try {
-    const result = await deactivateUser(uid, body.password);
+    const result = await auth.deactivateUser(uid, body.password);
     if (!result.ok) return reply.code(result.code ?? 400).send({ error: result.message });
     await session.destroy(reply, sid);
     return reply.code(200).send({ ok: true });

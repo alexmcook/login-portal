@@ -1,13 +1,35 @@
 import * as argon2 from 'argon2';
 import { userRepo } from '../repositories/user.js'
-import { setupAuth, type AuthService } from '../services/auth.js'
+import * as auth from '../services/auth.js'
 
-export { type AuthService } from '../services/auth.js'
+export { registerUser, activateUser, verifyUser, deactivateUser, updatePassword }
 
-export const auth: AuthService = {
-  registerUser: (email: string, password: string) => registerUser(userRepo, hashProvider, email, password),
-  activateUser: (token: string) => activateUser(userRepo, token),
-  verifyUser: (email: string, password: string) => verifyUser(userRepo, hashProvider, email, password),
-  deactivateUser: (userId: string, password: string) => deactivateUser(userRepo, hashProvider, userId, password),
-  updatePassword: (userId: string, newPassword: string) => updatePassword(userRepo, hashProvider, userId, newPassword)
+const hashProvider: auth.HashProvider = {
+  hash: async (password: string, options?: { timeCost?: number }) => {
+    const timeCost = options?.timeCost ?? 3;
+    return await argon2.hash(password, { timeCost });
+  },
+  verify: async (hash: string, password: string) => {
+    return await argon2.verify(hash, password);
+  }
+};
+
+function registerUser(email: string, password: string): Promise<string> {
+  return auth.registerUser(userRepo, hashProvider, email, password);
 }
+
+function activateUser(token: string): Promise<string> {
+  return auth.activateUser(userRepo, token);
+}
+
+function verifyUser(email: string, password: string): Promise<string> {
+  return auth.verifyUser(userRepo, hashProvider, email, password);
+}
+
+const deactivateUser = (userId: string, password: string): Promise<string> => {
+  return auth.deactivateUser(userRepo, hashProvider, userId, password);
+};
+
+const updatePassword = (userId: string, newPassword: string): Promise<string> => {
+  return auth.updatePassword(userRepo, hashProvider, userId, newPassword);
+};
