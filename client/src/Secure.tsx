@@ -1,13 +1,16 @@
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAppContext } from './useAppContext.js';
-import { secure, logout, deactivate, type UserData } from './api.js';
+import { secure, logout, type UserData } from './api.js';
+import { ConfirmDeactivate } from './ConfirmDeactivate.js';
 import { Deactivate } from './Deactivate.js';
 
 export const Secure = () => {
   const [userData, setUserData] = useState<UserData | null>(null);
   const [loading, setLoading] = useState<boolean>(true);
   const [promptDeactivate, setPromptDeactivate] = useState<boolean>(false);
+  const [isDeactivating, setIsDeactivating] = useState<boolean>(false);
+  const [password, setPassword] = useState<string>('');
 
   const { isAuthed, setIsAuthed } = useAppContext();
 
@@ -37,11 +40,10 @@ export const Secure = () => {
   }
 
   const confirmDeactivate = async (password: string) => {
-    await deactivate(password);
+    setPassword(password);
     setPromptDeactivate(false);
-    await logout();
+    setIsDeactivating(true);
     setIsAuthed(false);
-    navigate('/', { replace: true });
   }
 
   const getDateTime = (dateString: string) => {
@@ -65,10 +67,14 @@ export const Secure = () => {
     return <div>No user data</div>
   }
 
+  if (isDeactivating) {
+    return <Deactivate password={password} />;
+  }
+
   return (
     <main className="container">
       {promptDeactivate && (
-        <Deactivate onConfirm={confirmDeactivate} onCancel={() => setPromptDeactivate(false)} />
+        <ConfirmDeactivate onConfirm={confirmDeactivate} onCancel={() => setPromptDeactivate(false)} />
       )}
       <article>
         <h1>Secure Page</h1>

@@ -1,42 +1,47 @@
-import { useState } from 'react'
+import { useState, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
+import { deactivate, logout } from './api.js';
 
-export const Deactivate = ({ onConfirm, onCancel }: { onConfirm: (password: string) => void | Promise<void>; onCancel: (value?: boolean) => void }) => {
-  const [password, setPassword] = useState('');
-  const [error, setError] = useState('');
+export const Deactivate = ({ password }: { password: string }) => {
+  const navigate = useNavigate();
+  const [status, setStatus] = useState<'loading' | 'success' | 'error'>('loading');
+  const [message, setMessage] = useState<string | null>(null);
 
-  const handleCancel = () => {
-    onCancel(false);
-  };
+  useEffect(() => {
+    const deactivateAccount = async () => {
+      setMessage('Deactivating your account, please wait...');
+      try {
+        const res = await deactivate(password);
+        if (!res.ok) {
+          setStatus('error');
+          setMessage(res.error || 'Deactivation failed');
+          return;
+        }
+        await logout();
+        setStatus('success');
+        setMessage('Your account has been successfully deactivated.');
+        setTimeout(() => {
+          navigate('/', { replace: true });
+        }, 3000);
+      } catch (err) {
+        setStatus('error');
+        setMessage('Deactivation failed');
+      }
+    };
 
-  const handleDeactivate = async () => {
-    if (password.length === 0) {
-      setError('Password is required');
-      return;
-    }
-    onConfirm(password);
-  };
+    deactivateAccount();
+  }, [navigate, password]);
 
   return (
-    <dialog open>
-      <form method="dialog">
-        <h2>Deactivate Account</h2>
-        <p>Are you sure you want to deactivate your account? This action cannot be undone.</p>
-        <p>Enter your password to continue.</p>
-        <input
-          type="password"
-          placeholder="Password"
-          autoComplete="password"
-          value={password}
-          onChange={(e) => setPassword(e.target.value)}
-          aria-invalid={error ? "true" : undefined}
-          aria-describedby="password-valid"
-        />
-        <small id="password-valid">{error}</small>
-        <fieldset role="group"> 
-          <button type="button" className={'secondary'} onClick={handleCancel}>Cancel</button>
-          <button type="button" onClick={handleDeactivate}>Deactivate</button>
-        </fieldset>
-      </form>
-    </dialog>
+    <main className="container">
+      <article>
+        <h1>Deactivation</h1>
+        <hr />
+        <>
+          {status === 'success' && <p>{message}</p>}
+          {status === 'error' && <p>{message}</p>}
+        </>
+      </article>
+    </main>
   );
 };
