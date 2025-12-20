@@ -6,6 +6,7 @@ import { AppProvider } from './AppContext.tsx';
 import { Register } from './Register.tsx';
 import { Secure } from './Secure.tsx';
 import { Activate } from './Activate.tsx';
+import { UpdatePassword } from './UpdatePassword.tsx';
 
 const router = createBrowserRouter([
   {
@@ -23,6 +24,10 @@ const router = createBrowserRouter([
   {
     path: '/activate',
     element: <Activate />,
+  },
+  {
+    path: '/reset',
+    element: <UpdatePassword />,
   }
 ]);
 

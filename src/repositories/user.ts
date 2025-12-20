@@ -93,20 +93,14 @@ async function createPasswordResetUrl(email: string): Promise<{ success: boolean
   const hmac = crypto.createHmac('sha256', process.env.PASSWORD_RESET_SECRET);
   hmac.update(token);
   const tokenHash = hmac.digest('hex');
+
+  const userId = userResult.user.id!;
   
   const expiration = 60 * 60; // 1 hour
   await redis.set(tokenHash, userId, expiration);
   return { success: true, url: `${process.env.APP_URL}/reset?token=${token}` };
 }
 
-async function updatePassword(token: string, newPassword: string): Promise<UserResult> {
-  const hmac = crypto.createHmac('sha256', process.env.PASSWORD_RESET_SECRET);
-  hmac.update(token);
-  const tokenHash = hmac.digest('hex');
-
-  const userId = await redis.get(tokenHash);
-  if (!userId) return false;
+async function updatePassword(userId: string, newPasswordHash: string): Promise<void> {
   await query('UPDATE users SET password_hash = $1 WHERE id = $2', [newPasswordHash, userId]);
-  await redis.del(tokenHash);
-  return { success: true };
 }

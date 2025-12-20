@@ -1,10 +1,13 @@
 import { useEffect, useState } from 'react'
 import { resetPassword } from './api.js'
 import { utils } from './utils.js'
+import { Notice } from './Notice.js'
 
 export const PasswordReset = ({ onCancel }: { onCancel: () => void }) => {
   const [email, setEmail] = useState('');
   const [error, setError] = useState('');
+  const [showNotice, setShowNotice] = useState(false);
+  const [resetUrl, setResetUrl] = useState('');
 
   const handleCancel = () => {
     onCancel(false);
@@ -22,7 +25,9 @@ export const PasswordReset = ({ onCancel }: { onCancel: () => void }) => {
       return;
     }
 
-    await resetPassword(email);
+    const { resetUrl } = await resetPassword(email);
+    setResetUrl(resetUrl);
+    setShowNotice(true);
   };
 
   const handleEmailChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -38,6 +43,8 @@ export const PasswordReset = ({ onCancel }: { onCancel: () => void }) => {
   return (
     <dialog open>
       <article>
+        {showNotice && !resetUrl && <Notice message={"Please check your email to reset your password!"} />}
+        {showNotice && resetUrl && <Notice message={"Because this email is not approved in the SES sandbox, a link will be shared directly."} url={resetUrl} />}
         <form method="dialog">
           <h2>Password Reset</h2>
           <input

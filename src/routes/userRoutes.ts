@@ -6,7 +6,7 @@ import { session } from '../services/session.js'
 import { sendEmail } from '../services/email.js'
 import { validateEmail, validatePassword } from '../utils/validator.js';
 
-const { registerUser, activateUser, verifyUser, resetPassword } = setupAuth(userRepo, {
+const { registerUser, activateUser, verifyUser, updatePassword } = setupAuth(userRepo, {
   hash: async (password, options) => {
     return argon2.hash(password, { timeCost: options?.timeCost ?? 3 });
   },
@@ -164,13 +164,13 @@ export async function userRoutes(fastify: FastifyInstance, _options: FastifyPlug
     }
 
     try {
-      // Create password reset token and send email
-      const result = await userRepo.createPasswordResetToken(body.email);
+      const result = await userRepo.createPasswordResetUrl(body.email);
       if (!result.success) {
         return reply.code(200).send({ ok: true }); // avoid revealing user existence
       }
       const resetUrl = result.url;
       if (process.env.NODE_ENV !== 'production') {
+        console.log(`Password reset URL for ${body.email}: ${resetUrl}`);
         return reply.code(201).send({ ok: true, resetUrl: result.url });
       } else {
         // send activation email
@@ -184,19 +184,18 @@ export async function userRoutes(fastify: FastifyInstance, _options: FastifyPlug
   });
 
   fastify.post('/set', async (request, reply) => {
-    const body = request.body as { password?: string };
-    if (!body || typeof body.password !== 'string' || !validatePassword(body.password)) {
+    const body = request.body as { token?: string, password?: string };
+
+    if (!body || typeof body.token !== 'string' || typeof body.password !== 'string' || !validatePassword(body.password)) {
       return reply.code(400).send({ error: 'invalid password format' });
     }
 
-    const token = (request.query as { token?: string })?.token;
-    if (!token || typeof token !== 'string') {
-      return reply.code(400).send({ error: 'reset token is required' });
+    if (!body.token) {
+      return reply.code(400).send({ error: 'token is required' });
     }
 
     try {
-      const result = await userRepo.resetPassword(token, body.password);
-      if (!result.success) return reply.code(400).send({ error: 'invalid or expired reset link' });
+      await updatePassword(body.token, body.password);
       return reply.code(200).send({ ok: true });
     } catch (err) {
       request.log.error(err);

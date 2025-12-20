@@ -103,3 +103,18 @@ export async function resetPassword(email: string): Promise<DataResponse> {
     return { ok: false, error: 'network error' };
   }
 };
+
+export async function updatePassword(token: string, newPassword: string): Promise<DataResponse> {
+  try {
+    const response = await fetch(`${API_PATH}/set`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ token: token, password: newPassword }),
+      credentials: 'include'
+    });
+    return await response.json();
+  } catch (err) {
+    console.error(err);
+    return { ok: false, error: 'network error' };
+  }
+};

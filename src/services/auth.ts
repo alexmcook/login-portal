@@ -1,4 +1,6 @@
 import { type UserRepo } from '../repositories/user.js'
+import { redis } from '../services/redis.js';
+import crypto from 'crypto';
 
 export type HashProvider = {
   hash: (password: string, options?: { timeCost?: number }) => Promise<string>
@@ -10,7 +12,7 @@ export type AuthService = {
   activateUser(token: string): Promise<{ ok: boolean; code?: number; message?: string }>
   verifyUser(email: string, password: string): Promise<{ ok: boolean; userId: string, code?: number; message?: string }>
   deactivateUser(userId: string, password: string): Promise<{ ok: boolean; code?: number; message?: string }>
-  resetPassword(userId: string, newPassword: string): Promise<{ ok: boolean; code?: number; message?: string }>
+  updatePassword(userId: string, newPassword: string): Promise<{ ok: boolean; code?: number; message?: string }>
 }
 
 export function setupAuth(userRepo: UserRepo, hashProvider: HashProvider): AuthService {
@@ -19,7 +21,7 @@ export function setupAuth(userRepo: UserRepo, hashProvider: HashProvider): AuthS
     activateUser: (token: string) => activateUser(userRepo, token),
     verifyUser: (email: string, password: string) => verifyUser(userRepo, hashProvider, email, password),
     deactivateUser: (userId: string, email: string) => deactivateUser(userRepo, hashProvider, userId, email),
-    resetPassword: (userId: string, newPassword: string) => resetPassword(userRepo, hashProvider, userId, newPassword)
+    updatePassword: (userId: string, newPassword: string) => updatePassword(userRepo, hashProvider, userId, newPassword)
   }
 }
 
@@ -56,11 +58,15 @@ async function deactivateUser(userRepo: UserRepo, hashProvider: HashProvider, us
   return { ok: true };
 }
 
-async function resetPassword(userRepo: UserRepo, hashProvider: HashProvider, userId: string, newPassword: string) {
-  const userResult = await userRepo.findById(userId);
-  if (!userResult.success) return { ok: false, code: 404, message: 'user not found' };
+async function updatePassword(userRepo: UserRepo, hashProvider: HashProvider, token: string, newPassword: string) {
+  const hmac = crypto.createHmac('sha256', process.env.PASSWORD_RESET_SECRET);
+  hmac.update(token);
+  const tokenHash = hmac.digest('hex');
+
+  const userId = await redis.get(tokenHash);
+  if (!userId) return { ok: false, code: 400, message: 'invalid or expired password reset link' };
   const hashedPassword = await hashProvider.hash(newPassword, { timeCost: 3 });
-  const updateResult = await userRepo.updatePassword(userResult.user!.id!, hashedPassword);
-  if (!updateResult.success) return { ok: false, code: 500, message: 'failed to update password' };
+  await userRepo.updatePassword(userId, hashedPassword);
+  await redis.del(tokenHash);
   return { ok: true };
 }
