@@ -4,12 +4,12 @@ import path from 'path'
 export const config = {
   NODE_ENV: process.env.NODE_ENV || 'development',
   SERVER_PORT: process.env.SERVER_PORT,
-  POSTGRES_HOST: process.env.POSTGRES_HOST,
+  POSTGRES_HOST: process.env.NODE_ENV ? process.env.POSTGRES_HOST : 'localhost', // use localhost in development
   POSTGRES_PORT: process.env.POSTGRES_PORT,
   POSTGRES_USER: process.env.POSTGRES_USER,
   POSTGRES_PASSWORD: readSecret('POSTGRES_PASSWORD'),
   POSTGRES_DB: process.env.POSTGRES_DB,
-  REDIS_HOST: process.env.REDIS_HOST,
+  REDIS_HOST: process.env.NODE_ENV ? process.env.REDIS_HOST : 'localhost', // use localhost in development
   REDIS_PORT: process.env.REDIS_PORT,
   REDIS_PASSWORD: readSecret('REDIS_PASSWORD'),
   ACTIVATION_SECRET: readSecret('ACTIVATION_SECRET'),

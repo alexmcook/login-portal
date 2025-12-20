@@ -51,10 +51,10 @@ async function verifyUser(userRepo: UserRepo, hashProvider: HashProvider, email:
 }
 
 async function deactivateUser(userRepo: UserRepo, hashProvider: HashProvider, userId: string, password: string) {
-  const userResult = await userRepo.findById(userId);
-  if (!userResult.success) return { ok: false, code: 404, message: 'user not found' };
-  const verifyResult = await verifyUser(userRepo, hashProvider, userResult.user!.email!, password);
-  if (!verifyResult.ok) return { ok: false, code: verifyResult.code, message: verifyResult.message };
+  const result = await userRepo.findById(userId);
+  if (!result.success) return { ok: false, code: 404, message: 'user not found' };
+  const valid = await hashProvider.verify(result.user!.password_hash!, password);
+  if (!valid) return { ok: false, code: 401, message: 'invalid credentials' };
   await userRepo.deleteUser(userId);
   return { ok: true };
 }

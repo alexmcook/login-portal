@@ -2,7 +2,7 @@ import Fastify, { type FastifyInstance } from 'fastify'
 import cookie from '@fastify/cookie'
 import cors from '@fastify/cors'
 import { redis } from './services/redis.js'
-import { userRoutes } from './routes/userRoutes.js'
+import { routes } from './routes/user.js'
 import { config } from './config.js'
 
 const fastify: FastifyInstance = Fastify({
@@ -23,12 +23,11 @@ fastify.register(cors, {
 	methods: ['GET', 'POST']
 });
 
-await fastify.register(userRoutes, { prefix: '/api' });
+await fastify.register(routes, { prefix: '/api' });
 
 async function start() {
 	try {
-		await fastify.listen({ port: Number(config.SERVER_PORT ?? 3000), host: '0.0.0.0' });
-		fastify.log.info('server started');
+		await fastify.listen({ port: Number(config.SERVER_PORT) });
 	} catch (err) {
 		fastify.log.error(err);
 		await fastify.close();
