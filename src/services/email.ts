@@ -1,9 +1,10 @@
 import { SESClient, SendEmailCommand } from '@aws-sdk/client-ses'
+import { config } from '../config.js'
 
-const sesClient = new SESClient({ region: process.env.AWS_REGION });
+const sesClient = new SESClient({ region: config.AWS_REGION });
 
 export async function sendEmail(to: string, subject: string, body: string) {
-    const sourceEmail = process.env.EMAIL_SOURCE;
+    const sourceEmail = config.EMAIL_SOURCE;
     if (!sourceEmail) {
         throw new Error('EMAIL_SOURCE environment variable is not set');
     }

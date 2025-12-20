@@ -1,6 +1,7 @@
 /**
  * @type {import('node-pg-migrate').ColumnDefinitions | undefined}
  */
+import { config } from '../config.js';
 export const shorthands = undefined;
 
 /**
@@ -18,10 +19,10 @@ export const up = (pgm) => {
     unique: ['email'],
   })
 
-  if (!process.env.APPROVED_EMAIL) {
+  if (!config.APPROVED_EMAIL) {
     return;
   }
-  const approved = (process.env.APPROVED_EMAIL).split(';').map(s => s.trim().toLowerCase());
+  const approved = (config.APPROVED_EMAIL).split(';').map(s => s.trim().toLowerCase());
   if (approved.length) {
     const values = approved.map(email => `'${email}'`).join(', ');
     pgm.sql(`INSERT INTO approved_email (email) VALUES (${values})`);

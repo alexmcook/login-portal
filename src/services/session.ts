@@ -1,6 +1,7 @@
 import { redis } from './redis.js';
 import crypto from 'crypto';
 import type { FastifyReply } from 'fastify';
+import { config } from '../config.js';
 
 export const session = { create, destroy, get, refreshTtl };
 
@@ -29,7 +30,7 @@ async function create(reply: FastifyReply, uid: String): Promise<string> {
     httpOnly: true,
     sameSite: 'lax',
     path: '/',
-    secure: process.env.NODE_ENV === 'production',
+    secure: config.NODE_ENV === 'production',
     maxAge: SESSION_TTL,
   });
   return sid;

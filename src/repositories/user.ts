@@ -1,6 +1,7 @@
 import { query } from '../services/postgres.js'
 import { redis } from '../services/redis.js';
 import crypto from 'crypto';
+import { config } from '../config.js';
 
 export type UserResult = { success: boolean, user?: UserRow };
 export type UserRow = { id?: string; email?: string; password_hash?: string, created_at?: Date, updated_at?: Date, last_login?: Date, is_active?: boolean };
@@ -55,21 +56,22 @@ async function setLastLogin(id: string): Promise<void> {
 }
 
 async function createActivationUrl(userId: string): Promise<string> {
-  const appUrl = process.env.APP_URL;
-  if (!appUrl) throw new Error('APP_URL is not defined');
   const token = crypto.randomBytes(32).toString('hex');
 
-  const hmac = crypto.createHmac('sha256', process.env.ACTIVATION_SECRET);
+  const hmac = crypto.createHmac('sha256', config.ACTIVATION_SECRET);
   hmac.update(token);
   const tokenHash = hmac.digest('hex');
 
   const expiration = 24 * 60 * 60; // 24 hours
   await redis.set(tokenHash, userId, expiration);
+
+  const protocol = config.NODE_ENV === 'production' ? 'https' : 'http';
+  const appUrl = `${protocol}://${config.APP_URL}`;
   return `${appUrl}/activate?token=${token}`;
 }
 
 async function activateUser(token: string): Promise<UserResult> {
-  const hmac = crypto.createHmac('sha256', process.env.ACTIVATION_SECRET);
+  const hmac = crypto.createHmac('sha256', config.ACTIVATION_SECRET);
   hmac.update(token);
   const tokenHash = hmac.digest('hex');
 
@@ -90,7 +92,7 @@ async function createPasswordResetUrl(email: string): Promise<{ success: boolean
     return { success: false };
   }
   const token = crypto.randomBytes(32).toString('hex');
-  const hmac = crypto.createHmac('sha256', process.env.PASSWORD_RESET_SECRET);
+  const hmac = crypto.createHmac('sha256', config.PASSWORD_RESET_SECRET);
   hmac.update(token);
   const tokenHash = hmac.digest('hex');
 
@@ -98,7 +100,10 @@ async function createPasswordResetUrl(email: string): Promise<{ success: boolean
   
   const expiration = 60 * 60; // 1 hour
   await redis.set(tokenHash, userId, expiration);
-  return { success: true, url: `${process.env.APP_URL}/reset?token=${token}` };
+
+  const protocol = config.NODE_ENV === 'production' ? 'https' : 'http';
+  const appUrl = `${protocol}://${config.APP_URL}`;
+  return { success: true, url: `${appUrl}/reset?token=${token}` };
 }
 
 async function updatePassword(userId: string, newPasswordHash: string): Promise<void> {

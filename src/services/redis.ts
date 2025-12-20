@@ -1,13 +1,14 @@
 import { createClient, type RedisClientType } from 'redis';
+import { config } from '../config.js';
 
 export const redis = { exists, set, get, del, expire, quit };
 
 const clientPromise: Promise<RedisClientType> = init();
 
 async function init(): Promise<RedisClientType> {
-  const host = process.env.REDIS_HOST ?? '127.0.0.1';
-  const port = process.env.REDIS_PORT ?? '6379';
-  const password = process.env.REDIS_PASSWORD;
+  const host = config.REDIS_HOST;
+  const port = config.REDIS_PORT;
+  const password = config.REDIS_PASSWORD;
   let redisUrl;
   if (password) {
     redisUrl = `redis://:${encodeURIComponent(password)}@${host}:${port}`;

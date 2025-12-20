@@ -1,11 +1,12 @@
 import { Pool, type QueryResult, type PoolClient, type QueryResultRow } from 'pg'
+import { config } from '../config.js'
 
 const pool = new Pool({
-  host: process.env.POSTGRES_HOST,
-  port: Number(process.env.POSTGRES_PORT),
-  user: process.env.POSTGRES_USER,
-  password: process.env.POSTGRES_PASSWORD,
-  database: process.env.POSTGRES_DB,
+  host: config.POSTGRES_HOST,
+  port: Number(config.POSTGRES_PORT),
+  user: config.POSTGRES_USER,
+  password: config.POSTGRES_PASSWORD,
+  database: config.POSTGRES_DB,
   max: 10
 })
 

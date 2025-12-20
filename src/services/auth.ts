@@ -1,6 +1,7 @@
 import { type UserRepo } from '../repositories/user.js'
 import { redis } from '../services/redis.js';
 import crypto from 'crypto';
+import { config } from '../config.js';
 
 export type HashProvider = {
   hash: (password: string, options?: { timeCost?: number }) => Promise<string>
@@ -59,7 +60,7 @@ async function deactivateUser(userRepo: UserRepo, hashProvider: HashProvider, us
 }
 
 async function updatePassword(userRepo: UserRepo, hashProvider: HashProvider, token: string, newPassword: string) {
-  const hmac = crypto.createHmac('sha256', process.env.PASSWORD_RESET_SECRET);
+  const hmac = crypto.createHmac('sha256', config.PASSWORD_RESET_SECRET);
   hmac.update(token);
   const tokenHash = hmac.digest('hex');
 

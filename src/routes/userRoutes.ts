@@ -5,6 +5,7 @@ import { userRepo } from '../repositories/user.js'
 import { session } from '../services/session.js'
 import { sendEmail } from '../services/email.js'
 import { validateEmail, validatePassword } from '../utils/validator.js';
+import { config } from '../config.js';
 
 const { registerUser, activateUser, verifyUser, updatePassword } = setupAuth(userRepo, {
   hash: async (password, options) => {
@@ -52,7 +53,7 @@ export async function userRoutes(fastify: FastifyInstance, _options: FastifyPlug
     try {
       const result = await registerUser(body.email, body.password);
       if (!result.ok) return reply.code(result.code ?? 400).send({ error: result.message });
-      if (process.env.NODE_ENV !== 'production') {
+      if (config.NODE_ENV !== 'production') {
         return reply.code(201).send({ ok: true, activationUrl: result.activationUrl });
       } else {
         // send activation email
@@ -169,8 +170,7 @@ export async function userRoutes(fastify: FastifyInstance, _options: FastifyPlug
         return reply.code(200).send({ ok: true }); // avoid revealing user existence
       }
       const resetUrl = result.url;
-      if (process.env.NODE_ENV !== 'production') {
-        console.log(`Password reset URL for ${body.email}: ${resetUrl}`);
+      if (config.NODE_ENV !== 'production') {
         return reply.code(201).send({ ok: true, resetUrl: result.url });
       } else {
         // send activation email

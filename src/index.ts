@@ -3,19 +3,22 @@ import cookie from '@fastify/cookie'
 import cors from '@fastify/cors'
 import { redis } from './services/redis.js'
 import { userRoutes } from './routes/userRoutes.js'
+import { config } from './config.js'
 
 const fastify: FastifyInstance = Fastify({
 	logger: true,
 });
 
-if (process.env.COOKIE_SECRET) {
-	fastify.register(cookie, { secret: process.env.COOKIE_SECRET });
+if (config.COOKIE_SECRET) {
+	fastify.register(cookie, { secret: config.COOKIE_SECRET });
 } else {
 	fastify.register(cookie);
 }
 
+const protocol = config.NODE_ENV === 'production' ? 'https' : 'http';
+console.log(`CORS origin set to: ${protocol}://${config.APP_URL}`);
 fastify.register(cors, {
-	origin: 'http://localhost:5173',
+	origin: `${protocol}://${config.APP_URL}`,
 	credentials: true,
 	methods: ['GET', 'POST']
 });
@@ -24,7 +27,7 @@ await fastify.register(userRoutes, { prefix: '/api' });
 
 async function start() {
 	try {
-		await fastify.listen({ port: 3000 });
+		await fastify.listen({ port: config.SERVER_PORT });
 		fastify.log.info('server started');
 	} catch (err) {
 		fastify.log.error(err);
