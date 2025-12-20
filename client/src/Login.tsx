@@ -24,7 +24,7 @@ export const Login = () => {
       }
     }
     checkAuth();
-  });
+  }, []);
 
   const handleLogin = async (event: React.MouseEvent<HTMLButtonElement> | React.FormEvent<HTMLFormElement>) => {
     event.preventDefault();

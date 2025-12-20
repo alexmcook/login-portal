@@ -1,5 +1,5 @@
 services:
-  db:
+  postgres:
     image: postgres:18-alpine
     container_name: login-portal-postgres
     restart: unless-stopped
@@ -47,14 +47,14 @@ services:
       - POSTGRES_PORT=${POSTGRES_PORT}
       - POSTGRES_USER=${POSTGRES_USER}
       - POSTGRES_DB=${POSTGRES_DB}
-      - REDIS_HOST=${REDIS_HOST}
-      - REDIS_PORT=${REDIS_PORT}
+      - REDIS_HOST=${REDIS_HOST:-redis}
+      - REDIS_PORT=${REDIS_PORT:-6379}
     ports:
       - "${SERVER_PORT:-3000}:3000"
     volumes:
       - ./.secrets:/run/secrets:ro
     depends_on:
-      - db
+      - postgres
       - redis
 
   client:
