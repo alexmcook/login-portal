@@ -15,7 +15,7 @@ export const Secure = () => {
     const fetchSecureData = async () => {
       setLoading(true);
       const response = await secure();
-      if (response.ok) {
+      if (response.ok && response.user) {
         setUserData(response.user);
         setIsAuthed(true);
       }
@@ -61,10 +61,14 @@ export const Secure = () => {
     return <div>Loading...</div>
   }
 
+  if (!userData) {
+    return <div>No user data</div>
+  }
+
   return (
     <main className="container">
       {promptDeactivate && (
-        <Deactivate onConfirm={confirmDeactivate} onCancel={setPromptDeactivate} />
+        <Deactivate onConfirm={confirmDeactivate} onCancel={() => setPromptDeactivate(false)} />
       )}
       <article>
         <h1>Secure Page</h1>

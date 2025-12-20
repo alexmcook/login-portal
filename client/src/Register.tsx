@@ -3,14 +3,16 @@ import { useNavigate } from 'react-router-dom';
 import { register, secure } from './api.js'
 import { Notice } from './Notice.js'
 import { utils } from './utils.js';
+import { useAppContext } from './useAppContext.js';
 
-export const Register = ({ setIsAuthed }: { setIsAuthed: (value: boolean) => void }) => {
+export const Register = () => {
+  const { setIsAuthed } = useAppContext();
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [emailError, setEmailError] = useState('');
   const [passwordError, setPasswordError] = useState('');
   const [loading, setLoading] = useState(false);
-  const [activationUrl, setActivationUrl] = useState('');
+  const [activationUrl, setActivationUrl] = useState<string | undefined>(undefined);
   const [showNotice, setShowNotice] = useState(false);
 
   useEffect(() => {

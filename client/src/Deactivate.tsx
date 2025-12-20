@@ -1,6 +1,6 @@
 import { useState } from 'react'
 
-export const Deactivate = ({ onConfirm, onCancel }: { onConfirm: () => void; onCancel: () => void }) => {
+export const Deactivate = ({ onConfirm, onCancel }: { onConfirm: (password: string) => void | Promise<void>; onCancel: (value?: boolean) => void }) => {
   const [password, setPassword] = useState('');
   const [error, setError] = useState('');
 

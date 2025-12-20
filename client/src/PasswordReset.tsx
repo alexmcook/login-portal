@@ -3,11 +3,11 @@ import { resetPassword } from './api.js'
 import { utils } from './utils.js'
 import { Notice } from './Notice.js'
 
-export const PasswordReset = ({ onCancel }: { onCancel: () => void }) => {
+export const PasswordReset = ({ onCancel }: { onCancel: (value?: boolean) => void }) => {
   const [email, setEmail] = useState('');
   const [error, setError] = useState('');
   const [showNotice, setShowNotice] = useState(false);
-  const [resetUrl, setResetUrl] = useState('');
+  const [resetUrl, setResetUrl] = useState<string | undefined>(undefined);
 
   const handleCancel = () => {
     onCancel(false);
@@ -25,8 +25,8 @@ export const PasswordReset = ({ onCancel }: { onCancel: () => void }) => {
       return;
     }
 
-    const { resetUrl } = await resetPassword(email);
-    setResetUrl(resetUrl);
+    const result = await resetPassword(email);
+    setResetUrl(result.resetUrl);
     setShowNotice(true);
   };
 

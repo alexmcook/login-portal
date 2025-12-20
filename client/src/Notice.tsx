@@ -1,6 +1,6 @@
 import { useState } from 'react'
 
-export const Notice = ({ message, url }: { message: string; url: string }) => {
+export const Notice = ({ message, url }: { message: string; url?: string }) => {
   const [visible, setVisible] = useState(true);
 
   if (!visible) return null;

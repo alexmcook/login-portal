@@ -11,10 +11,10 @@ export const UpdatePassword = () => {
   const [errorBottom, setErrorBottom] = useState('');
   const [searchParams] = useSearchParams();
   const [showNotice, setShowNotice] = useState(false);
-  const token = searchParams.get('token');
+  const token = searchParams.get('token') ?? '';
   const navigate = useNavigate();
 
-  const handlePasswordChange = (e) => {
+  const handlePasswordChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     setPassword(e.target.value);
     if (e.target.value.length === 0) {
       setErrorTop('');
@@ -34,7 +34,7 @@ export const UpdatePassword = () => {
     }
   }
 
-  const handleConfirmPasswordChange = (e) => {
+  const handleConfirmPasswordChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     setConfirmPassword(e.target.value);
     if (e.target.value.length === 0) {
       setErrorBottom('');
@@ -69,7 +69,7 @@ export const UpdatePassword = () => {
   return (
     <main className="container">
       <article>
-        {showNotice && <Notice message={"Password successfully updated."} />}
+        {showNotice && <Notice message={"Password successfully updated."} />} 
         <form method="dialog">
           <h2>Update Password</h2>
           <input
