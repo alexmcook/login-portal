@@ -4,7 +4,7 @@ import { config } from '../config.js'
 const sesClient = new SESClient({ region: String(config.AWS_REGION) });
 
 export async function sendEmail(to: string, subject: string, body: string) {
-  if (!(config as any).EMAIL_ENABLED) {
+  if (!config.EMAIL_ENABLED) {
     console.log(`Email sending is disabled. To: ${to}, Subject: ${subject}, Body: ${body}`);
     return true;
   }
