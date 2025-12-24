@@ -9,12 +9,20 @@ async function init(): Promise<any> {
   const host = config.REDIS_HOST;
   const port = config.REDIS_PORT;
   const password = config.REDIS_PASSWORD;
+
+  if (!host) throw new Error('REDIS_HOST is not configured')
+  if (!port) throw new Error('REDIS_PORT is not configured')
+
+  const hostStr = String(host)
+  const portStr = String(port)
+
   let redisUrl;
   if (password) {
-    redisUrl = `redis://:${encodeURIComponent(password)}@${host}:${port}`;
+    redisUrl = `redis://:${encodeURIComponent(String(password))}@${hostStr}:${portStr}`;
   } else {
-    redisUrl = `redis://${host}:${port}`;
+    redisUrl = `redis://${hostStr}:${portStr}`;
   }
+
   const client = createClient({ url: redisUrl });
   client.on('error', (err) => process.stderr.write(`Redis error ${String(err)}\n`));
   await client.connect();
