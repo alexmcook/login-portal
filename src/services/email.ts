@@ -1,5 +1,5 @@
 import { SESClient, SendEmailCommand } from '@aws-sdk/client-ses'
-import { config } from '../config.js'
+import { config } from '../config'
 
 const sesClient = new SESClient({ region: String(config.AWS_REGION) });
 

@@ -16,6 +16,7 @@ export const config = {
   COOKIE_SECRET: readSecret('COOKIE_SECRET'),
   PASSWORD_RESET_SECRET: readSecret('PASSWORD_RESET_SECRET'),
   AWS_REGION: process.env.AWS_REGION,
+  EMAIL_ENABLED: process.env.EMAIL_ENABLED === 'true',
   EMAIL_SOURCE: process.env.EMAIL_SOURCE,
   APPROVED_EMAIL: readSecret('APPROVED_EMAIL'),
   APP_URL: process.env.APP_URL,
