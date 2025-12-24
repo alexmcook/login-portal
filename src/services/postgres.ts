@@ -1,23 +1,30 @@
 import { Pool, type QueryResult, type PoolClient, type QueryResultRow } from 'pg'
 import { config } from '../config.js'
 
-const pool = new Pool({
-  host: config.POSTGRES_HOST,
-  port: Number(config.POSTGRES_PORT),
-  user: config.POSTGRES_USER,
-  password: config.POSTGRES_PASSWORD,
-  database: config.POSTGRES_DB,
-  max: 10
-})
+let pool: Pool | null = null
+
+function getPool(): Pool {
+  if (!pool) {
+    pool = new Pool({
+      host: config.POSTGRES_HOST,
+      port: Number(config.POSTGRES_PORT),
+      user: config.POSTGRES_USER,
+      password: config.POSTGRES_PASSWORD,
+      database: config.POSTGRES_DB,
+      max: 10
+    })
+  }
+  return pool
+}
 
 // Convenience wrapper for simple queries using the shared pool
-export async function query(text: string, params?: unknown[]): Promise<QueryResult<QueryResultRow>> {
-  return pool.query(text, params)
+async function query(text: string, params?: unknown[]): Promise<QueryResult<QueryResultRow>> {
+  return getPool().query(text, params)
 }
 
 // Acquire a client, run the callback, and always release the client
-export async function withClient(fn: (client: PoolClient) => Promise<QueryResult<QueryResultRow>>): Promise<QueryResult<QueryResultRow>> {
-  const client = await pool.connect()
+async function withClient(fn: (client: PoolClient) => Promise<QueryResult<QueryResultRow>>): Promise<QueryResult<QueryResultRow>> {
+  const client = await getPool().connect()
   try {
     return await fn(client)
   } finally {
@@ -26,8 +33,8 @@ export async function withClient(fn: (client: PoolClient) => Promise<QueryResult
 }
 
 // Run a function inside a DB transaction (BEGIN / COMMIT / ROLLBACK)
-export async function transaction(fn: (client: PoolClient) => Promise<QueryResult<QueryResultRow>>): Promise<QueryResult<QueryResultRow>> {
-  const client = await pool.connect()
+async function transaction(fn: (client: PoolClient) => Promise<QueryResult<QueryResultRow>>): Promise<QueryResult<QueryResultRow>> {
+  const client = await getPool().connect()
   try {
     await client.query('BEGIN')
     const result = await fn(client)
@@ -39,4 +46,10 @@ export async function transaction(fn: (client: PoolClient) => Promise<QueryResul
   } finally {
     client.release()
   }
+}
+
+export const postgres = {
+  query,
+  withClient,
+  transaction
 }

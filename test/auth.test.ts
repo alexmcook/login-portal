@@ -8,7 +8,13 @@ describe('registerUser', () => {
     const mockUserRepo = {
       findById: vi.fn(),
       findByEmail: vi.fn(),
-      createUser: vi.fn()
+      createUser: vi.fn(),
+      setLastLogin: vi.fn(),
+      createActivationUrl: vi.fn(),
+      activateUser: vi.fn(),
+      deleteUser: vi.fn(),
+      createPasswordResetUrl: vi.fn(),
+      updatePassword: vi.fn()
     };
 
 		const mockHashProvider = {

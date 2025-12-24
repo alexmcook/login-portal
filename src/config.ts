@@ -4,13 +4,13 @@ import path from 'path'
 export const config = {
   NODE_ENV: process.env.NODE_ENV || 'development',
   SERVER_PORT: process.env.SERVER_PORT,
-  POSTGRES_HOST: process.env.NODE_ENV ? process.env.POSTGRES_HOST : 'localhost', // use localhost in development
-  POSTGRES_PORT: process.env.POSTGRES_PORT,
+  POSTGRES_HOST: process.env.POSTGRES_HOST ?? (process.env.NODE_ENV === 'development' ? 'localhost' : 'postgres'), // default to postgres in non-development
+  POSTGRES_PORT: process.env.POSTGRES_PORT ?? '5432',
   POSTGRES_USER: process.env.POSTGRES_USER,
   POSTGRES_PASSWORD: readSecret('POSTGRES_PASSWORD'),
   POSTGRES_DB: process.env.POSTGRES_DB,
-  REDIS_HOST: process.env.NODE_ENV ? process.env.REDIS_HOST : 'localhost', // use localhost in development
-  REDIS_PORT: process.env.REDIS_PORT,
+  REDIS_HOST: process.env.REDIS_HOST ?? (process.env.NODE_ENV === 'development' ? 'localhost' : 'redis'), // default to redis in non-development
+  REDIS_PORT: process.env.REDIS_PORT ?? '6379',
   REDIS_PASSWORD: readSecret('REDIS_PASSWORD'),
   ACTIVATION_SECRET: readSecret('ACTIVATION_SECRET'),
   COOKIE_SECRET: readSecret('COOKIE_SECRET'),
