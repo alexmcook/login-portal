@@ -54,43 +54,34 @@ jobs:
           host: ${{ secrets.DEPLOY_HOST }}
           username: ${{ secrets.DEPLOY_USER }}
           key: ${{ secrets.SSH_PRIVATE_KEY }}
-          port: ${{ secrets.DEPLOY_PORT || '22' }}
+          port: ${{ secrets.DEPLOY_PORT }}
           script: |
             set -euo pipefail
-            DEPLOY_DIR=${{ secrets.DEPLOY_DIR || '/home/' + secrets.DEPLOY_USER + '/login-portal' }}
+            DEPLOY_DIR="${{ secrets.DEPLOY_DIR }}"
+            if [ -z "$DEPLOY_DIR" ]; then
+              DEPLOY_DIR="/home/${{ secrets.DEPLOY_USER }}/login-portal"
+            fi
             echo "Using deploy dir: $DEPLOY_DIR"
             mkdir -p "$DEPLOY_DIR/.secrets"
 
             # write secret files expected by src/config.ts
-            cat > "$DEPLOY_DIR/.secrets/POSTGRES_PASSWORD" <<'POSTGRES_PASSWORD'
-${{ secrets.POSTGRES_PASSWORD }}
-POSTGRES_PASSWORD
-            chmod 0400 "$DEPLOY_DIR/.secrets/POSTGRES_PASSWORD" || true
+            cat > "$DEPLOY_DIR/.secrets/POSTGRES_PASSWORD" <<'POSTGRES_PASSWORD' ${{ secrets.POSTGRES_PASSWORD }}
+            POSTGRES_PASSWORD chmod 0400 "$DEPLOY_DIR/.secrets/POSTGRES_PASSWORD" || true
 
-            cat > "$DEPLOY_DIR/.secrets/REDIS_PASSWORD" <<'REDIS_PASSWORD'
-${{ secrets.REDIS_PASSWORD }}
-REDIS_PASSWORD
-            chmod 0400 "$DEPLOY_DIR/.secrets/REDIS_PASSWORD" || true
+            cat > "$DEPLOY_DIR/.secrets/REDIS_PASSWORD" <<'REDIS_PASSWORD' ${{ secrets.REDIS_PASSWORD }}
+            REDIS_PASSWORD chmod 0400 "$DEPLOY_DIR/.secrets/REDIS_PASSWORD" || true
 
-            cat > "$DEPLOY_DIR/.secrets/ACTIVATION_SECRET" <<'ACTIVATION_SECRET'
-${{ secrets.ACTIVATION_SECRET }}
-ACTIVATION_SECRET
-            chmod 0400 "$DEPLOY_DIR/.secrets/ACTIVATION_SECRET" || true
+            cat > "$DEPLOY_DIR/.secrets/ACTIVATION_SECRET" <<'ACTIVATION_SECRET' ${{ secrets.ACTIVATION_SECRET }}
+            ACTIVATION_SECRET chmod 0400 "$DEPLOY_DIR/.secrets/ACTIVATION_SECRET" || true
 
-            cat > "$DEPLOY_DIR/.secrets/PASSWORD_RESET_SECRET" <<'PASSWORD_RESET_SECRET'
-${{ secrets.PASSWORD_RESET_SECRET }}
-PASSWORD_RESET_SECRET
-            chmod 0400 "$DEPLOY_DIR/.secrets/PASSWORD_RESET_SECRET" || true
+            cat > "$DEPLOY_DIR/.secrets/PASSWORD_RESET_SECRET" <<'PASSWORD_RESET_SECRET' ${{ secrets.PASSWORD_RESET_SECRET }}
+            PASSWORD_RESET_SECRET chmod 0400 "$DEPLOY_DIR/.secrets/PASSWORD_RESET_SECRET" || true
 
-            cat > "$DEPLOY_DIR/.secrets/JWT_SECRET" <<'COOKIE_SECRET'
-${{ secrets.COOKIE_SECRET }}
-COOKIE_SECRET
-            chmod 0400 "$DEPLOY_DIR/.secrets/JWT_SECRET" || true
+            cat > "$DEPLOY_DIR/.secrets/JWT_SECRET" <<'JWT_SECRET' ${{ secrets.JWT_SECRET }}
+            JWT_SECRET chmod 0400 "$DEPLOY_DIR/.secrets/JWT_SECRET" || true
 
-            cat > "$DEPLOY_DIR/.secrets/APPROVED_EMAIL" <<'APPROVED_EMAIL'
-${{ secrets.APPROVED_EMAIL }}
-APPROVED_EMAIL
-            chmod 0400 "$DEPLOY_DIR/.secrets/APPROVED_EMAIL" || true
+            cat > "$DEPLOY_DIR/.secrets/APPROVED_EMAIL" <<'APPROVED_EMAIL' ${{ secrets.APPROVED_EMAIL }}
+            APPROVED_EMAIL chmod 0400 "$DEPLOY_DIR/.secrets/APPROVED_EMAIL" || true
 
             # Ensure repository present
             if [ -d "$DEPLOY_DIR/.git" ]; then
@@ -130,4 +121,3 @@ APPROVED_EMAIL
             fi
 
             echo "Deploy complete"
-
