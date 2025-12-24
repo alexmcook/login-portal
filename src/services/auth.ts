@@ -1,6 +1,6 @@
+import crypto from 'crypto';
 import { type UserRepo } from '../repositories/user.js'
 import { redis } from '../services/redis.js';
-import crypto from 'crypto';
 import { config } from '../config.js';
 
 export type HashProvider = {
