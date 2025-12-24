@@ -72,6 +72,7 @@ async function loginHandler(request: FastifyRequest, reply: FastifyReply) {
     const userId = result.userId!;
     try {
       await session.create(reply, userId);
+      await userRepo.setLastLogin(userId);
     } catch (err) {
       request.log.warn({ err }, 'failed to create session');
     }
