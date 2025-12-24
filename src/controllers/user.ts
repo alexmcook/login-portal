@@ -15,10 +15,12 @@ async function preHandler(request: FastifyRequest, reply: FastifyReply) {
       return;
     }
     const value = await session.get(sid);
-    request.session = { uid: value };
-    if (value) {
-      await session.refreshTtl(sid);
+    if (!value) {
+      request.session = null
+      return
     }
+    request.session = { uid: value };
+    await session.refreshTtl(sid);
   } catch (err) {
     request.log.warn({ err }, 'session load failed');
     request.session = null;
@@ -124,7 +126,18 @@ async function secureHandler(request: FastifyRequest, reply: FastifyReply) {
   if (!s || typeof s.uid === 'undefined') {
     return reply.code(401).send({ error: 'unauthorized' });
   }
-  return reply.code(200).send({ ok: true, uid: s.uid });
+
+  try {
+    const uid = s.uid;
+    const res = await userRepo.findById(uid);
+    if (!res.success || !res.user) {
+      return reply.code(401).send({ error: 'unauthorized' });
+    }
+    return reply.code(200).send({ ok: true, user: res.user });
+  } catch (err) {
+    request.log.error(err);
+    return reply.code(500).send({ error: 'internal' });
+  }
 }
 
 async function resetHandler(request: FastifyRequest, reply: FastifyReply) {

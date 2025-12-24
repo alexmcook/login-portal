@@ -127,7 +127,9 @@ describe('user controller', () => {
     expect(reply.code).toHaveBeenCalledWith(200)
   })
 
-  it('secureHandler rejects unauthorized and returns uid on success', async () => {
+  it('secureHandler rejects unauthorized and returns user on success', async () => {
+    const userRepo = { findById: vi.fn().mockResolvedValue({ success: true, user: { id: 'u1' } }) }
+    vi.doMock('../src/repositories/user.js', () => ({ userRepo }))
     const { secureHandler } = await import('../src/controllers/user')
 
     const reply = makeReply()
@@ -138,8 +140,8 @@ describe('user controller', () => {
     const req = makeRequest()
     req.session = { uid: 'u1' }
     await secureHandler(req, reply)
+    expect(userRepo.findById).toHaveBeenCalledWith('u1')
     expect(reply.code).toHaveBeenCalledWith(200)
-    expect(reply.send).toHaveBeenCalledWith(expect.objectContaining({ ok: true, uid: 'u1' }))
   })
 
   it('resetHandler returns generic ok for unknown email and returns reset URL in dev', async () => {

@@ -14,20 +14,27 @@ export const Secure = () => {
 
   const { isAuthed, setIsAuthed } = useAppContext();
 
+  const navigate = useNavigate();
+
   useEffect(() => {
     const fetchSecureData = async () => {
       setLoading(true);
       const response = await secure();
-      if (response.ok && response.user) {
+      // handle unauthorized or error responses
+      if (!response.ok) {
+        setIsAuthed(false);
+        navigate('/', { replace: true });
+        setLoading(false);
+        return;
+      }
+      if (response.user) {
         setUserData(response.user);
         setIsAuthed(true);
       }
       setLoading(false);
     }
     fetchSecureData();
-  }, [setIsAuthed]);
-
-  const navigate = useNavigate();
+  }, [setIsAuthed, navigate]);
 
   const handleLogout = async () => {
     await logout();

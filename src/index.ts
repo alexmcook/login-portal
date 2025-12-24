@@ -10,6 +10,8 @@ const fastify: FastifyInstance = Fastify({
 	logger: true,
 });
 
+fastify.register(cookie);
+
 const protocol = config.NODE_ENV === 'production' ? 'https' : 'http';
 fastify.log.info(`CORS origin set to: ${protocol}://${config.APP_URL}`);
 fastify.register(cors, {
@@ -22,7 +24,7 @@ await fastify.register(routes, { prefix: '/api' });
 
 async function start() {
 	try {
-		await fastify.listen({ port: Number(config.SERVER_PORT) });
+		await fastify.listen({ port: Number(config.SERVER_PORT), host: '0.0.0.0' });
 	} catch (err) {
 		fastify.log.error(err);
 		await fastify.close();
