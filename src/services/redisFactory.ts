@@ -51,7 +51,7 @@ export function createMockRedis(): RedisLike {
     },
     set: async (key: string, value: string, ttlSeconds?: number) => {
       const expiresAt = ttlSeconds ? now() + ttlSeconds * 1000 : undefined;
-      store.set(key, { v: value, expiresAt });
+      store.set(key, expiresAt === undefined ? { v: value } : { v: value, expiresAt });
     },
     del: async (key: string) => { store.delete(key); },
     expire: async (key: string, ttlSeconds: number) => {

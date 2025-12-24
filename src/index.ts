@@ -28,20 +28,6 @@ await fastify.register(routes, { prefix: '/api' });
 
 async function start() {
 	try {
-		fastify.log.info('Checking Postgres connectivity...');
-		// retry a few times in case Postgres is still coming up
-		for (let i = 0; i < 10; i++) {
-			try {
-				await postgres.query('SELECT 1');
-				fastify.log.info('Postgres is reachable');
-				break;
-			} catch (err) {
-				fastify.log.warn(`Postgres not ready, retrying (${i + 1}/10)`);
-				await new Promise((r) => setTimeout(r, 1000));
-				if (i === 9) throw err;
-			}
-		}
-
 		await fastify.listen({ port: Number(config.SERVER_PORT) });
 	} catch (err) {
 		fastify.log.error(err);

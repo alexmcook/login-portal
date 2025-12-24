@@ -14,22 +14,22 @@ const hashProvider: auth.HashProvider = {
   }
 };
 
-function registerUser(email: string, password: string): Promise<string> {
+function registerUser(email: string, password: string): Promise<any> {
   return auth.registerUser(userRepo, hashProvider, email, password);
 }
 
-function activateUser(token: string): Promise<string> {
+function activateUser(token: string): Promise<any> {
   return auth.activateUser(userRepo, token);
 }
 
-function verifyUser(email: string, password: string): Promise<string> {
+function verifyUser(email: string, password: string): Promise<any> {
   return auth.verifyUser(userRepo, hashProvider, email, password);
 }
 
-const deactivateUser = (userId: string, password: string): Promise<string> => {
+const deactivateUser = (userId: string, password: string): Promise<any> => {
   return auth.deactivateUser(userRepo, hashProvider, userId, password);
 };
 
-const updatePassword = (userId: string, newPassword: string): Promise<string> => {
+const updatePassword = (userId: string, newPassword: string): Promise<any> => {
   return auth.updatePassword(userRepo, hashProvider, userId, newPassword);
 };

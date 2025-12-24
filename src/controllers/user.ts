@@ -1,3 +1,4 @@
+import type { FastifyRequest, FastifyReply } from 'fastify';
 import { userRepo } from '../repositories/user.js'
 import { session } from '../services/session.js'
 import { validateEmail, validatePassword } from '../utils/validator.js';

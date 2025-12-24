@@ -1,8 +1,8 @@
 import crypto from 'crypto';
 import { config } from '../config.js';
 import { createRealRedis, type RedisLike } from '../services/redisFactory.js';
-import { redis as runetimeRedis } from '../services/redis.js';
-import { createRealPostgres, type PostgresLike } from '../services/postgresFactory.js';
+import { redis as runtimeRedis } from '../services/redis.js';
+import type { PostgresLike } from '../services/postgresFactory.js';
 import { postgres as runtimePostgres } from '../services/postgres.js';
 
 export type UserResult = { success: boolean, user?: UserRow };
@@ -107,5 +107,5 @@ export function createUserRepo(redis: RedisLike, pg: PostgresLike): UserRepo {
 // default repo for runtime compatibility (uses existing services/redis singleton and the postgres service object)
 export const userRepo: UserRepo = createUserRepo(
   createRealRedis(runtimeRedis),
-  createRealPostgres(runtimePostgres)
+  runtimePostgres
 );

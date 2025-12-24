@@ -8,7 +8,7 @@ export type HashProvider = {
   verify: (hash: string, password: string) => Promise<boolean>
 }
 
-export function setupAuth(userRepo: UserRepo, hashProvider: HashProvider): AuthService {
+export function setupAuth(userRepo: UserRepo, hashProvider: HashProvider) {
   return {
     registerUser: (email: string, password: string) => registerUser(userRepo, hashProvider, email, password),
     activateUser: (token: string) => activateUser(userRepo, token),
