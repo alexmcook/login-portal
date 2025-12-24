@@ -11,6 +11,7 @@ const REFRESH_COOKIE = 'refresh'
 const ACCESS_TTL = Number(config.JWT_TTL_SECONDS)
 const REFRESH_TTL = Number(config.REFRESH_TTL_SECONDS)
 const SECRET = String(config.JWT_SECRET)
+if (!SECRET) throw new Error('JWT_SECRET is not configured')
 
 function makeJti(): string { return crypto.randomBytes(16).toString('hex') }
 function makeRefresh(): string { return crypto.randomBytes(32).toString('hex') }
