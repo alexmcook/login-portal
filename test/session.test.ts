@@ -6,6 +6,7 @@ const mockRedis = {
   get: vi.fn(),
   del: vi.fn(),
   expire: vi.fn(),
+  exists: vi.fn(),
 }
 
 // lightweight fake FastifyReply for cookie interaction
@@ -31,58 +32,97 @@ describe('session service', () => {
     mockRedis.expire.mockReset()
   })
 
-  it('creates a session: stores sid in redis and sets cookie', async () => {
+  it('creates a session: returns jwt token and sets cookie and refresh token in redis', async () => {
+    process.env.JWT_SECRET = 'test-secret'
+    process.env.JWT_TTL_SECONDS = '3600'
+    process.env.REFRESH_TTL_SECONDS = '7200'
     // replace the redis import before loading the module
-    vi.mock('../src/services/redis', () => ({ redis: mockRedis }))
+    vi.doMock('../src/services/redis.js', () => ({ redis: mockRedis }))
 
     const { session } = await import('../src/services/session')
 
     const reply = makeReply()
-    mockRedis.set.mockResolvedValueOnce(undefined as any)
 
     const sid = await session.create(reply, 'uid-1')
 
     expect(typeof sid).toBe('string')
     expect(mockRedis.set).toHaveBeenCalled()
     expect(reply.setCookie).toHaveBeenCalledWith('sid', sid, expect.objectContaining({ httpOnly: true }))
+    expect(reply.setCookie).toHaveBeenCalledWith('refresh', expect.any(String), expect.objectContaining({ httpOnly: true }))
   })
 
-  it('gets a session: returns null for missing sid and uid when present', async () => {
-    vi.mock('../src/services/redis', () => ({ redis: mockRedis }))
+  it('gets a session: returns null for missing token and uid when not blacklisted', async () => {
+    process.env.JWT_SECRET = 'test-secret'
+    process.env.JWT_TTL_SECONDS = '3600'
+    vi.doMock('../src/services/redis.js', () => ({ redis: mockRedis }))
     const { session } = await import('../src/services/session')
 
-    mockRedis.get.mockResolvedValue(null as any)
+    mockRedis.exists.mockResolvedValue(false)
     let res = await session.get(undefined)
     expect(res).toBeNull()
 
-    mockRedis.get.mockResolvedValue(null as any)
+    // invalid token
     res = await session.get('nope')
     expect(res).toBeNull()
 
-    mockRedis.get.mockResolvedValue('uid-xyz')
-    res = await session.get('some-sid')
+    // valid token
+    const jwt = (await import('jsonwebtoken')) as any
+    const token = jwt.sign({ uid: 'uid-xyz', jti: 'jti-1' }, 'test-secret', { expiresIn: 3600 })
+    mockRedis.exists.mockResolvedValueOnce(false)
+    res = await session.get(token)
     expect(res).toBe('uid-xyz')
   })
 
-  it('destroys a session: deletes redis key and clears cookie', async () => {
-    vi.mock('../src/services/redis', () => ({ redis: mockRedis }))
+  it('destroys a session: blacklists jti in redis, deletes refresh key and clears cookies', async () => {
+    process.env.JWT_SECRET = 'test-secret'
+    process.env.JWT_TTL_SECONDS = '3600'
+    vi.doMock('../src/services/redis.js', () => ({ redis: mockRedis }))
     const { session } = await import('../src/services/session')
 
     const reply = makeReply()
+    const jwt = (await import('jsonwebtoken')) as any
+    const token = jwt.sign({ uid: 'u', jti: 'jti-123', exp: Math.floor(Date.now() / 1000) + 1000 }, 'test-secret')
+
+    mockRedis.set.mockResolvedValueOnce(undefined as any)
     mockRedis.del.mockResolvedValueOnce(undefined as any)
 
-    await session.destroy(reply, 'sid-123')
+    await session.destroy(reply, token, 'r-1')
 
+    expect(mockRedis.set).toHaveBeenCalled()
     expect(mockRedis.del).toHaveBeenCalled()
     expect(reply.clearCookie).toHaveBeenCalledWith('sid')
+    expect(reply.clearCookie).toHaveBeenCalledWith('refresh')
   })
 
-  it('refreshes ttl: calls redis.expire with proper key', async () => {
-    vi.mock('../src/services/redis', () => ({ redis: mockRedis }))
+  it('refreshes access token using refresh token and rotates refresh token', async () => {
+    process.env.JWT_SECRET = 'test-secret'
+    process.env.JWT_TTL_SECONDS = '3600'
+    process.env.REFRESH_TTL_SECONDS = '7200'
+    vi.doMock('../src/services/redis.js', () => ({ redis: mockRedis }))
+    const { session } = await import('../src/services/session')
+
+    const reply = makeReply()
+    mockRedis.get.mockResolvedValueOnce('uid-abc')
+    mockRedis.set.mockResolvedValueOnce(undefined as any)
+    mockRedis.del.mockResolvedValueOnce(undefined as any)
+
+    const newAccess = await session.refresh(reply, 'r-1')
+    expect(newAccess).toBeTruthy()
+    expect(mockRedis.get).toHaveBeenCalled()
+    expect(mockRedis.set).toHaveBeenCalled()
+    expect(mockRedis.del).toHaveBeenCalled()
+    expect(reply.setCookie).toHaveBeenCalledWith('sid', expect.any(String), expect.objectContaining({ httpOnly: true }))
+    expect(reply.setCookie).toHaveBeenCalledWith('refresh', expect.any(String), expect.objectContaining({ httpOnly: true }))
+  })
+
+  it('refreshTtl is a no-op for JWT sessions', async () => {
+    process.env.JWT_SECRET = 'test-secret'
+    process.env.JWT_TTL_SECONDS = '3600'
+    vi.doMock('../src/services/redis.js', () => ({ redis: mockRedis }))
     const { session } = await import('../src/services/session')
 
     mockRedis.expire.mockResolvedValueOnce(undefined as any)
     await session.refreshTtl('sid-789')
-    expect(mockRedis.expire).toHaveBeenCalled()
+    expect(mockRedis.expire).not.toHaveBeenCalled()
   })
 })

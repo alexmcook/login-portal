@@ -85,8 +85,9 @@ async function loginHandler(request: FastifyRequest, reply: FastifyReply) {
 
 async function logoutHandler(request: FastifyRequest, reply: FastifyReply) {
   const sid = request.cookies?.sid as string | undefined;
+  const refresh = request.cookies?.refresh as string | undefined;
   if (sid) {
-    await session.destroy(reply, sid);
+    await session.destroy(reply, sid, refresh);
     return reply.code(200).send({ ok: true });
   }
   return reply.code(400).send({ ok: false });
@@ -109,7 +110,8 @@ async function deactivateHandler(request: FastifyRequest, reply: FastifyReply) {
   try {
     const result = await auth.deactivateUser(uid, body.password);
     if (!result.ok) return reply.code(result.code ?? 400).send({ error: result.message });
-    await session.destroy(reply, sid);
+    const refresh = request.cookies?.refresh as string | undefined;
+    await session.destroy(reply, sid, refresh);
     return reply.code(200).send({ ok: true });
   } catch (err) {
     request.log.error(err);
@@ -118,23 +120,11 @@ async function deactivateHandler(request: FastifyRequest, reply: FastifyReply) {
 }
 
 async function secureHandler(request: FastifyRequest, reply: FastifyReply) {
-  const session = request.session;
-  if (!session || typeof session.uid === 'undefined') {
+  const s = request.session;
+  if (!s || typeof s.uid === 'undefined') {
     return reply.code(401).send({ error: 'unauthorized' });
   }
-
-  try {
-    const uid = session.uid;
-    const res = await userRepo.findById(uid);
-    if (!res.success || !res.user) {
-      return reply.code(401).send({ error: 'unauthorized' });
-    }
-
-    return reply.code(200).send({ ok: true, user: res.user });
-  } catch (err) {
-    request.log.error(err);
-    return reply.code(500).send({ error: 'internal' });
-  }
+  return reply.code(200).send({ ok: true, uid: s.uid });
 }
 
 async function resetHandler(request: FastifyRequest, reply: FastifyReply) {

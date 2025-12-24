@@ -10,12 +10,6 @@ const fastify: FastifyInstance = Fastify({
 	logger: true,
 });
 
-if (config.COOKIE_SECRET) {
-	fastify.register(cookie, { secret: config.COOKIE_SECRET });
-} else {
-	fastify.register(cookie);
-}
-
 const protocol = config.NODE_ENV === 'production' ? 'https' : 'http';
 fastify.log.info(`CORS origin set to: ${protocol}://${config.APP_URL}`);
 fastify.register(cors, {
