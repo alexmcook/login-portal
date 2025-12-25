@@ -62,11 +62,7 @@ jobs:
         uses: actions/checkout@v4
 
       - name: Prepare .env
-        run: |
-          cp .env.example .env
-
-      - name: Debug
-        run: ls -la
+        run: cp .env.example .env
 
       - name: Copy orchestration files
         uses: appleboy/scp-action@v0.1.7
@@ -83,21 +79,10 @@ jobs:
           host: ${{ secrets.DEPLOY_HOST }}
           username: ${{ secrets.DEPLOY_USER }}
           key: ${{ secrets.SSH_PRIVATE_KEY }}
-          envs: |
-            DEPLOY_USER=${{ secrets.DEPLOY_USER }}
-            POSTGRES_PASSWORD=${{ secrets.POSTGRES_PASSWORD }}
-            REDIS_PASSWORD=${{ secrets.REDIS_PASSWORD }}
-            ACTIVATION_SECRET=${{ secrets.ACTIVATION_SECRET }}
-            PASSWORD_RESET_SECRET=${{ secrets.PASSWORD_RESET_SECRET }}
-            JWT_SECRET=${{ secrets.JWT_SECRET }}
-            APPROVED_EMAIL=${{ secrets.APPROVED_EMAIL }}
-            GITHUB_TOKEN=${{ secrets.GITHUB_TOKEN }}
-            GITHUB_ACTOR=${{ github.actor }}
-            GITHUB_REPOSITORY_OWNER=${{ github.repository_owner }}
           script: |
             set -euo pipefail
 
-            DEPLOY_DIR="/home/$DEPLOY_USER/login-portal"
+            DEPLOY_DIR="/home/${{ secrets.DEPLOY_USER }}/login-portal"
             SECRETS_DIR="$DEPLOY_DIR/.secrets/"
 
             mkdir -p $DEPLOY_DIR
@@ -105,20 +90,20 @@ jobs:
 
             cd $DEPLOY_DIR
 
-            printf "%s" "$POSTGRES_PASSWORD" > $SECRETS_DIR/POSTGRES_PASSWORD
-            printf "%s" "$REDIS_PASSWORD" > $SECRETS_DIR/REDIS_PASSWORD
-            printf "%s" "$ACTIVATION_SECRET" > $SECRETS_DIR/ACTIVATION_SECRET
-            printf "%s" "$PASSWORD_RESET_SECRET" > $SECRETS_DIR/PASSWORD_RESET_SECRET
-            printf "%s" "$JWT_SECRET" > $SECRETS_DIR/JWT_SECRET
-            printf "%s" "$APPROVED_EMAIL" > $SECRETS_DIR/APPROVED_EMAIL
+            printf "%s" "${{ secrets.POSTGRES_PASSWORD }}" > $SECRETS_DIR/POSTGRES_PASSWORD
+            printf "%s" "${{ secrets.REDIS_PASSWORD }}" > $SECRETS_DIR/REDIS_PASSWORD
+            printf "%s" "${{ secrets.ACTIVATION_SECRET }}" > $SECRETS_DIR/ACTIVATION_SECRET
+            printf "%s" "${{ secrets.PASSWORD_RESET_SECRET }}" > $SECRETS_DIR/PASSWORD_RESET_SECRET
+            printf "%s" "${{ secrets.JWT_SECRET }}" > $SECRETS_DIR/JWT_SECRET
+            printf "%s" "${{ secrets.APPROVED_EMAIL }}" > $SECRETS_DIR/APPROVED_EMAIL
 
             chmod 600 $SECRETS_DIR/*
             chmod 700 $SECRETS_DIR
 
-            echo $GITHUB_TOKEN | docker login ghcr.io -u $GITHUB_ACTOR --password-stdin
+            echo ${{ secrets.GITHUB_TOKEN }} | docker login ghcr.io -u ${{ github.actor }} --password-stdin
 
-            docker pull ghcr.io/$GITHUB_REPOSITORY_OWNER/login-portal-api:latest
-            docker pull ghcr.io/$GITHUB_REPOSITORY_OWNER/login-portal-client:latest
+            docker pull ghcr.io/${{ github.repository_owner }}/login-portal-api:latest
+            docker pull ghcr.io/${{ github.repository_owner }}/login-portal-client:latest
 
             docker compose pull
             docker compose up -d
