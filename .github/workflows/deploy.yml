@@ -29,14 +29,26 @@ jobs:
           username: ${{ github.actor }}
           password: ${{ secrets.GITHUB_TOKEN }}
 
-      - name: Build and push
+      - name: Build and push API image
         uses: docker/build-push-action@v4
         with:
           context: .
           push: true
           tags: |
-            ghcr.io/${{ github.repository_owner }}/login-portal:latest
-            ghcr.io/${{ github.repository_owner }}/login-portal:${{ github.sha }}
+            ghcr.io/${{ github.repository_owner }}/login-portal-api:latest
+            ghcr.io/${{ github.repository_owner }}/login-portal-api:${{ github.sha }}
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
+
+      - name: Build and push Client image
+        uses: docker/build-push-action@v4
+        with:
+          context: ./client
+          file: client/Dockerfile
+          push: true
+          tags: |
+            ghcr.io/${{ github.repository_owner }}/login-portal-client:latest
+            ghcr.io/${{ github.repository_owner }}/login-portal-client:${{ github.sha }}
           cache-from: type=gha
           cache-to: type=gha,mode=max
 
@@ -115,13 +127,14 @@ jobs:
 
             cd "$DEPLOY_DIR"
 
-            # Pull latest image and deploy with docker compose
-            docker pull ghcr.io/${{ github.repository_owner }}/login-portal:latest || true
+            # Pull latest images and deploy with docker compose
+            docker pull ghcr.io/${{ github.repository_owner }}/login-portal-api:latest || true
+            docker pull ghcr.io/${{ github.repository_owner }}/login-portal-client:latest || true
 
             # Use docker compose if present
             if [ -f docker-compose.yml ] || [ -f docker-compose.yaml ]; then
               docker compose pull || true
-              docker compose up -d --build
+              docker compose up -d
             else
               # Fallback: run container directly (mount secrets dir into container as in compose)
               docker stop login-portal-api || true

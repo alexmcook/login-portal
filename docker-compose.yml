@@ -6,14 +6,18 @@ services:
     env_file: .env
     environment:
       - POSTGRES_USER=${POSTGRES_USER:-postgres}
-      - POSTGRES_PASSWORD=${POSTGRES_PASSWORD:-password}
       - POSTGRES_DB=${POSTGRES_DB:-login-portal}
+      - PGDATA_QUIET=false
+      - POSTGRES_PASSWORD_FILE=/run/secrets/POSTGRES_PASSWORD
+      - POSTGRES_INITDB_ARGS=--auth-host=scram-sha-256 --auth-local=scram-sha-256
+    secrets:
+      - POSTGRES_PASSWORD
     ports:
       - "${POSTGRES_PORT:-5432}:5432"
     volumes:
-      - db_data:/var/lib/postgresql
+      - db_data:/var/lib/postgresql/data
     healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER} -d ${POSTGRES_DB}"]
+      test: ["CMD-SHELL", "pg_isready -U $$POSTGRES_USER -d $$POSTGRES_DB"]
       interval: 10s
       timeout: 5s
       retries: 5
@@ -23,13 +27,13 @@ services:
     container_name: login-portal-redis
     restart: unless-stopped
     env_file: .env
-    environment:
-      - REDIS_PASSWORD=${REDIS_PASSWORD}
-    command: ["redis-server", "--requirepass", "${REDIS_PASSWORD}"]
+    secrets:
+      - REDIS_PASSWORD
+    command: ["sh", "-c", "redis-server --requirepass $$(cat /run/secrets/REDIS_PASSWORD)"]
     ports:
       - "6379:6379"
     healthcheck:
-      test: ["CMD", "redis-cli", "-a", "${REDIS_PASSWORD}", "ping"]
+      test: ["CMD-SHELL", "redis-cli -a $$(cat /run/secrets/REDIS_PASSWORD) ping | grep PONG"]
       interval: 10s
       timeout: 5s
       retries: 5
@@ -49,13 +53,20 @@ services:
       - POSTGRES_DB=${POSTGRES_DB:-login-portal}
       - REDIS_HOST=${REDIS_HOST:-redis}
       - REDIS_PORT=${REDIS_PORT:-6379}
+    secrets:
+      - POSTGRES_PASSWORD
+      - REDIS_PASSWORD
+      - ACTIVATION_SECRET
+      - PASSWORD_RESET_SECRET
+      - JWT_SECRET
+      - APPROVED_EMAIL
     ports:
       - "${SERVER_PORT:-3000}:3000"
-    volumes:
-      - ./.secrets:/run/secrets:ro
     depends_on:
-      - postgres
-      - redis
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
 
   client:
     build:
@@ -72,3 +83,17 @@ services:
 volumes:
   db_data:
   redis_data:
+
+secrets:
+  POSTGRES_PASSWORD:
+    file: .secrets/POSTGRES_PASSWORD
+  REDIS_PASSWORD:
+    file: .secrets/REDIS_PASSWORD
+  ACTIVATION_SECRET:
+    file: .secrets/ACTIVATION_SECRET
+  PASSWORD_RESET_SECRET:
+    file: .secrets/PASSWORD_RESET_SECRET
+  JWT_SECRET:
+    file: .secrets/JWT_SECRET
+  APPROVED_EMAIL:
+    file: .secrets/APPROVED_EMAIL
