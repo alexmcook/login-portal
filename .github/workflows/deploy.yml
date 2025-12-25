@@ -65,23 +65,35 @@ jobs:
             mkdir -p "$DEPLOY_DIR/.secrets"
 
             # write secret files expected by src/config.ts
-            cat > "$DEPLOY_DIR/.secrets/POSTGRES_PASSWORD" <<'POSTGRES_PASSWORD' ${{ secrets.POSTGRES_PASSWORD }}
-            POSTGRES_PASSWORD chmod 0400 "$DEPLOY_DIR/.secrets/POSTGRES_PASSWORD" || true
+            cat > "$DEPLOY_DIR/.secrets/POSTGRES_PASSWORD" <<'POSTGRES_PASSWORD'
+            ${{ secrets.POSTGRES_PASSWORD }}
+            POSTGRES_PASSWORD
+            chmod 0400 "$DEPLOY_DIR/.secrets/POSTGRES_PASSWORD" || true
 
-            cat > "$DEPLOY_DIR/.secrets/REDIS_PASSWORD" <<'REDIS_PASSWORD' ${{ secrets.REDIS_PASSWORD }}
-            REDIS_PASSWORD chmod 0400 "$DEPLOY_DIR/.secrets/REDIS_PASSWORD" || true
+            cat > "$DEPLOY_DIR/.secrets/REDIS_PASSWORD" <<'REDIS_PASSWORD'
+            ${{ secrets.REDIS_PASSWORD }}
+            REDIS_PASSWORD
+            chmod 0400 "$DEPLOY_DIR/.secrets/REDIS_PASSWORD" || true
 
-            cat > "$DEPLOY_DIR/.secrets/ACTIVATION_SECRET" <<'ACTIVATION_SECRET' ${{ secrets.ACTIVATION_SECRET }}
-            ACTIVATION_SECRET chmod 0400 "$DEPLOY_DIR/.secrets/ACTIVATION_SECRET" || true
+            cat > "$DEPLOY_DIR/.secrets/ACTIVATION_SECRET" <<'ACTIVATION_SECRET'
+            ${{ secrets.ACTIVATION_SECRET }}
+            ACTIVATION_SECRET
+            chmod 0400 "$DEPLOY_DIR/.secrets/ACTIVATION_SECRET" || true
 
-            cat > "$DEPLOY_DIR/.secrets/PASSWORD_RESET_SECRET" <<'PASSWORD_RESET_SECRET' ${{ secrets.PASSWORD_RESET_SECRET }}
-            PASSWORD_RESET_SECRET chmod 0400 "$DEPLOY_DIR/.secrets/PASSWORD_RESET_SECRET" || true
+            cat > "$DEPLOY_DIR/.secrets/PASSWORD_RESET_SECRET" <<'PASSWORD_RESET_SECRET'
+            ${{ secrets.PASSWORD_RESET_SECRET }}
+            PASSWORD_RESET_SECRET
+            chmod 0400 "$DEPLOY_DIR/.secrets/PASSWORD_RESET_SECRET" || true
 
-            cat > "$DEPLOY_DIR/.secrets/JWT_SECRET" <<'JWT_SECRET' ${{ secrets.JWT_SECRET }}
-            JWT_SECRET chmod 0400 "$DEPLOY_DIR/.secrets/JWT_SECRET" || true
+            cat > "$DEPLOY_DIR/.secrets/JWT_SECRET" <<'JWT_SECRET'
+            ${{ secrets.JWT_SECRET }}
+            JWT_SECRET
+            chmod 0400 "$DEPLOY_DIR/.secrets/JWT_SECRET" || true
 
-            cat > "$DEPLOY_DIR/.secrets/APPROVED_EMAIL" <<'APPROVED_EMAIL' ${{ secrets.APPROVED_EMAIL }}
-            APPROVED_EMAIL chmod 0400 "$DEPLOY_DIR/.secrets/APPROVED_EMAIL" || true
+            cat > "$DEPLOY_DIR/.secrets/APPROVED_EMAIL" <<'APPROVED_EMAIL'
+            ${{ secrets.APPROVED_EMAIL }}
+            APPROVED_EMAIL
+            chmod 0400 "$DEPLOY_DIR/.secrets/APPROVED_EMAIL" || true
 
             # Ensure repository present
             if [ -d "$DEPLOY_DIR/.git" ]; then
