@@ -102,11 +102,10 @@ jobs:
 
             echo ${{ secrets.GITHUB_TOKEN }} | docker login ghcr.io -u ${{ github.actor }} --password-stdin
 
-            docker pull ghcr.io/${{ github.repository_owner }}/login-portal-api:latest
-            docker pull ghcr.io/${{ github.repository_owner }}/login-portal-client:latest
-
-            docker compose pull
-            GITHUB_REPOSITORY_OWNER=${{ github.actor }} docker compose up -d --no-build
+            echo "Pulling latest images..."
+            GITHUB_REPOSITORY_OWNER=${{ github.repository_owner }} docker compose pull
+            echo "Starting containers..."
+            GITHUB_REPOSITORY_OWNER=${{ github.repository_owner }} docker compose up -d --no-build
+            echo "Cleaning up unused images..."
             docker image prune -f
-
             echo "Deploy complete"
