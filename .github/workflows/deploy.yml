@@ -65,16 +65,17 @@ jobs:
         run: |
           cp .env.example .env
 
+      - name: Debug
+        run: ls -la
+
       - name: Copy orchestration files
         uses: appleboy/scp-action@v0.1.7
         with:
           host: ${{ secrets.DEPLOY_HOST }}
           username: ${{ secrets.DEPLOY_USER }}
           key: ${{ secrets.SSH_PRIVATE_KEY }}
-          source: |
-            docker-compose.yml
-            .env
-          target: /home/${{ secrets.DEPLOY_USER }}/login-portal/
+          source: "docker-compose.yml,.env"
+          target: "/home/${{ secrets.DEPLOY_USER }}/login-portal/"
 
       - name: Deploy via SSH
         uses: appleboy/ssh-action@v1.2.4
