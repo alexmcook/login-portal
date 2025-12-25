@@ -61,97 +61,66 @@ jobs:
       - name: Checkout (for reference)
         uses: actions/checkout@v4
 
-      - name: Deploy via SSH
-        uses: appleboy/ssh-action@v0.1.9
+      - name: Prepare .env
+        run: |
+          cp .env.example .env
+
+      - name: Copy orchestration files
+        uses: appleboy/scp-action@v0.1.7
         with:
           host: ${{ secrets.DEPLOY_HOST }}
           username: ${{ secrets.DEPLOY_USER }}
           key: ${{ secrets.SSH_PRIVATE_KEY }}
+          source: |
+            docker-compose.yml
+            .env
+          target: /home/${{ secrets.DEPLOY_USER }}/login-portal/
+
+      - name: Deploy via SSH
+        uses: appleboy/ssh-action@v1.2.4
+        with:
+          host: ${{ secrets.DEPLOY_HOST }}
+          username: ${{ secrets.DEPLOY_USER }}
+          key: ${{ secrets.SSH_PRIVATE_KEY }}
+          envs: |
+            DEPLOY_USER=${{ secrets.DEPLOY_USER }}
+            POSTGRES_PASSWORD=${{ secrets.POSTGRES_PASSWORD }}
+            REDIS_PASSWORD=${{ secrets.REDIS_PASSWORD }}
+            ACTIVATION_SECRET=${{ secrets.ACTIVATION_SECRET }}
+            PASSWORD_RESET_SECRET=${{ secrets.PASSWORD_RESET_SECRET }}
+            JWT_SECRET=${{ secrets.JWT_SECRET }}
+            APPROVED_EMAIL=${{ secrets.APPROVED_EMAIL }}
+            GITHUB_TOKEN=${{ secrets.GITHUB_TOKEN }}
+            GITHUB_ACTOR=${{ github.actor }}
+            GITHUB_REPOSITORY_OWNER=${{ github.repository_owner }}
           script: |
             set -euo pipefail
-            DEPLOY_DIR="${{ secrets.DEPLOY_DIR }}"
-            if [ -z "$DEPLOY_DIR" ]; then
-              DEPLOY_DIR="/home/${{ secrets.DEPLOY_USER }}/login-portal"
-            fi
-            echo "Using deploy dir: $DEPLOY_DIR"
-            mkdir -p "$DEPLOY_DIR/.secrets"
 
-            # write secret files expected by src/config.ts
-            cat > "$DEPLOY_DIR/.secrets/POSTGRES_PASSWORD" <<'POSTGRES_PASSWORD'
-            ${{ secrets.POSTGRES_PASSWORD }}
-            POSTGRES_PASSWORD
-            chmod 0400 "$DEPLOY_DIR/.secrets/POSTGRES_PASSWORD" || true
+            DEPLOY_DIR="/home/$DEPLOY_USER/login-portal"
+            SECRETS_DIR="$DEPLOY_DIR/.secrets/"
 
-            cat > "$DEPLOY_DIR/.secrets/REDIS_PASSWORD" <<'REDIS_PASSWORD'
-            ${{ secrets.REDIS_PASSWORD }}
-            REDIS_PASSWORD
-            chmod 0400 "$DEPLOY_DIR/.secrets/REDIS_PASSWORD" || true
+            mkdir -p $DEPLOY_DIR
+            mkdir -p $SECRETS_DIR
 
-            cat > "$DEPLOY_DIR/.secrets/ACTIVATION_SECRET" <<'ACTIVATION_SECRET'
-            ${{ secrets.ACTIVATION_SECRET }}
-            ACTIVATION_SECRET
-            chmod 0400 "$DEPLOY_DIR/.secrets/ACTIVATION_SECRET" || true
+            cd $DEPLOY_DIR
 
-            cat > "$DEPLOY_DIR/.secrets/PASSWORD_RESET_SECRET" <<'PASSWORD_RESET_SECRET'
-            ${{ secrets.PASSWORD_RESET_SECRET }}
-            PASSWORD_RESET_SECRET
-            chmod 0400 "$DEPLOY_DIR/.secrets/PASSWORD_RESET_SECRET" || true
+            printf "%s" "$POSTGRES_PASSWORD" > $SECRETS_DIR/POSTGRES_PASSWORD
+            printf "%s" "$REDIS_PASSWORD" > $SECRETS_DIR/REDIS_PASSWORD
+            printf "%s" "$ACTIVATION_SECRET" > $SECRETS_DIR/ACTIVATION_SECRET
+            printf "%s" "$PASSWORD_RESET_SECRET" > $SECRETS_DIR/PASSWORD_RESET_SECRET
+            printf "%s" "$JWT_SECRET" > $SECRETS_DIR/JWT_SECRET
+            printf "%s" "$APPROVED_EMAIL" > $SECRETS_DIR/APPROVED_EMAIL
 
-            cat > "$DEPLOY_DIR/.secrets/JWT_SECRET" <<'JWT_SECRET'
-            ${{ secrets.JWT_SECRET }}
-            JWT_SECRET
-            chmod 0400 "$DEPLOY_DIR/.secrets/JWT_SECRET" || true
+            chmod 600 $SECRETS_DIR/*
+            chmod 700 $SECRETS_DIR
 
-            cat > "$DEPLOY_DIR/.secrets/APPROVED_EMAIL" <<'APPROVED_EMAIL'
-            ${{ secrets.APPROVED_EMAIL }}
-            APPROVED_EMAIL
-            chmod 0400 "$DEPLOY_DIR/.secrets/APPROVED_EMAIL" || true
+            echo $GITHUB_TOKEN | docker login ghcr.io -u $GITHUB_ACTOR --password-stdin
 
-            # Ensure repository present
-            if [ -d "$DEPLOY_DIR/.git" ]; then
-              echo "Repo exists, pulling latest"
-              cd "$DEPLOY_DIR" && git fetch --all && git reset --hard origin/main || true
-            else
-              if [ -d "$DEPLOY_DIR" ]; then
-                echo "Directory exists but is not a git repo; initializing and pulling"
-                git -C "$DEPLOY_DIR" init
-                git -C "$DEPLOY_DIR" remote remove origin 2>/dev/null || true
-                git -C "$DEPLOY_DIR" remote add origin https://github.com/${{ github.repository }}
-                git -C "$DEPLOY_DIR" fetch --depth 1 origin main
-                git -C "$DEPLOY_DIR" reset --hard origin/main || true
-              else
-                echo "Cloning repo into $DEPLOY_DIR"
-                git clone --depth 1 https://github.com/${{ github.repository }} "$DEPLOY_DIR"
-              fi
-            fi
+            docker pull ghcr.io/$GITHUB_REPOSITORY_OWNER/login-portal-api:latest
+            docker pull ghcr.io/$GITHUB_REPOSITORY_OWNER/login-portal-client:latest
 
-            cd "$DEPLOY_DIR"
-
-            # Pull latest images and deploy with docker compose
-            docker pull ghcr.io/${{ github.repository_owner }}/login-portal-api:latest || true
-            docker pull ghcr.io/${{ github.repository_owner }}/login-portal-client:latest || true
-
-            # Use docker compose if present
-            if [ -f docker-compose.yml ] || [ -f docker-compose.yaml ]; then
-              docker compose pull || true
-              docker compose up -d
-            else
-              # Fallback: run container directly (mount secrets dir into container as in compose)
-              docker stop login-portal-api || true
-              docker rm login-portal-api || true
-              docker run -d --name login-portal-api \
-                -p 3000:3000 \
-                -v "$DEPLOY_DIR/.secrets":/run/secrets:ro \
-                ghcr.io/${{ github.repository_owner }}/login-portal:latest
-            fi
-
-            # Optionally run migrations explicitly once
-            if command -v docker > /dev/null; then
-              if [ -f docker-compose.yml ] || [ -f docker-compose.yaml ]; then
-                docker compose run --rm api npm run migrate:up || true
-              else
-                docker exec -i login-portal-api npm run migrate:up || true
-              fi
-            fi
+            docker compose pull
+            docker compose up -d
+            docker image prune -f
 
             echo "Deploy complete"
