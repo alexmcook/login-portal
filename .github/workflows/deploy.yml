@@ -100,8 +100,17 @@ jobs:
               echo "Repo exists, pulling latest"
               cd "$DEPLOY_DIR" && git fetch --all && git reset --hard origin/main || true
             else
-              echo "Cloning repo into $DEPLOY_DIR"
-              git clone --depth 1 https://github.com/${{ github.repository }} "$DEPLOY_DIR"
+              if [ -d "$DEPLOY_DIR" ]; then
+                echo "Directory exists but is not a git repo; initializing and pulling"
+                git -C "$DEPLOY_DIR" init
+                git -C "$DEPLOY_DIR" remote remove origin 2>/dev/null || true
+                git -C "$DEPLOY_DIR" remote add origin https://github.com/${{ github.repository }}
+                git -C "$DEPLOY_DIR" fetch --depth 1 origin main
+                git -C "$DEPLOY_DIR" reset --hard origin/main || true
+              else
+                echo "Cloning repo into $DEPLOY_DIR"
+                git clone --depth 1 https://github.com/${{ github.repository }} "$DEPLOY_DIR"
+              fi
             fi
 
             cd "$DEPLOY_DIR"
