@@ -40,7 +40,7 @@ async function registerHandler(request: FastifyRequest, reply: FastifyReply) {
       return reply.code(201).send({ ok: true, activationUrl: result.activationUrl });
     } else {
       // send activation email
-      return reply.code(201).send({ ok: true });
+      return reply.code(201).send({ ok: true, activationUrl: result.activationUrl });
     }
   } catch (err) {
     request.log.error(err);
@@ -155,10 +155,9 @@ async function resetHandler(request: FastifyRequest, reply: FastifyReply) {
     if (config.NODE_ENV !== 'production') {
       return reply.code(201).send({ ok: true, resetUrl: result.url });
     } else {
-      // send activation email
-      return reply.code(201).send({ ok: true });
+      // send reset email
+      return reply.code(201).send({ ok: true, resetUrl: result.url });
     }
-    return reply.code(200).send({ ok: true });
   } catch (err) {
     request.log.error(err);
     return reply.code(500).send({ error: 'password reset failed' });
