@@ -3,7 +3,13 @@ import { config } from '../config.js';
 
 export const redis = { exists, set, get, del, expire, quit };
 
-const clientPromise: Promise<any> = init();
+let clientPromise: Promise<any> | null = null
+function getClientPromise(): Promise<any> {
+  if (!clientPromise) {
+    clientPromise = init();
+  }
+  return clientPromise;
+}
 
 async function init(): Promise<any> {
   const host = config.REDIS_HOST;
@@ -30,13 +36,13 @@ async function init(): Promise<any> {
 }
 
 async function exists(key: string): Promise<boolean> {
-  const client = await clientPromise;
+  const client = await getClientPromise();
   const exists = await client.exists(key);
   return exists === 1;
 }
 
 async function set(key: string, value: string, ttlSeconds?: number) {
-  const client = await clientPromise;
+  const client = await getClientPromise();
   if (ttlSeconds) {
     await client.setEx(key, ttlSeconds, value);
   } else {
@@ -45,21 +51,21 @@ async function set(key: string, value: string, ttlSeconds?: number) {
 }
 
 async function get(key: string): Promise<string | null> {
-  const client = await clientPromise;
+  const client = await getClientPromise();
   return client.get(key);
 }
 
 async function del(key: string): Promise<void> {
-  const client = await clientPromise;
+  const client = await getClientPromise();
   await client.del(key);
 }
 
 async function expire(key: string, ttlSeconds: number): Promise<void> {
-  const client = await clientPromise;
+  const client = await getClientPromise();
   await client.expire(key, ttlSeconds);
 }
 
 async function quit(): Promise<void> {
-  const client = await clientPromise;
+  const client = await getClientPromise();
   await client.quit();
 }
