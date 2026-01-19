@@ -12,8 +12,8 @@ services:
       - POSTGRES_INITDB_ARGS=--auth-host=scram-sha-256 --auth-local=scram-sha-256
     secrets:
       - POSTGRES_PASSWORD
-    ports:
-      - "${POSTGRES_PORT:-5432}:5432"
+    networks:
+      - internal-bridge
     volumes:
       - postgres_data:/var/lib/postgresql/data
     healthcheck:
@@ -30,8 +30,8 @@ services:
     secrets:
       - REDIS_PASSWORD
     command: ["sh", "-c", "redis-server --requirepass $$(cat /run/secrets/REDIS_PASSWORD)"]
-    ports:
-      - "6379:6379"
+    networks:
+      - internal-bridge
     healthcheck:
       test: ["CMD-SHELL", "redis-cli -a $$(cat /run/secrets/REDIS_PASSWORD) ping | grep PONG"]
       interval: 10s
@@ -61,6 +61,9 @@ services:
       - PASSWORD_RESET_SECRET
       - JWT_SECRET
       - APPROVED_EMAIL
+      - APP_URL
+    networks:
+      - internal-bridge
     ports:
       - "${SERVER_PORT:-3000}:3000"
     depends_on:
@@ -77,6 +80,8 @@ services:
     container_name: login-portal-client
     restart: unless-stopped
     env_file: .env
+    networks:
+      - internal-bridge
     ports:
       - "${CLIENT_PORT:-5173}:5173"
     depends_on:
@@ -98,3 +103,9 @@ secrets:
     file: .secrets/JWT_SECRET
   APPROVED_EMAIL:
     file: .secrets/APPROVED_EMAIL
+  APP_URL:
+    file: .secrets/APP_URL
+
+networks:
+  internal-bridge:
+    driver: bridge
