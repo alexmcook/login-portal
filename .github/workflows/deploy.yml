@@ -116,6 +116,7 @@ jobs:
             printf "%s" "${{ secrets.PASSWORD_RESET_SECRET }}" > $SECRETS_DIR/PASSWORD_RESET_SECRET
             printf "%s" "${{ secrets.JWT_SECRET }}" > $SECRETS_DIR/JWT_SECRET
             printf "%s" "${{ secrets.APPROVED_EMAIL }}" > $SECRETS_DIR/APPROVED_EMAIL
+            printf "%s" "${{ secrets.APP_URL }}" > $SECRETS_DIR/APP_URL
 
             chmod 600 $SECRETS_DIR/*
             chmod 700 $SECRETS_DIR
