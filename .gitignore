@@ -7,4 +7,12 @@ logs/
 client/node_modules/
 client/dist/
 
+certs/
+
+**/*.tfstate
+**/*.tfstate.backup
+**/*.tfvars
+**/*.tfvars.json
+**/.terraform/
+
 todo.txt
